@@ -119,7 +119,7 @@ export default function SongsPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {selectedYelpId && <SongCard airbnbId={selectedYelpId} handleClose={() => setSelectedYelpId(null)} />}
+      {/* {selectedYelpId && <YelpCard airbnbId={selectedYelpId} handleClose={() => setSelectedYelpId(null)} />} */}
       <h2>Find Yelp Businesse</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>
