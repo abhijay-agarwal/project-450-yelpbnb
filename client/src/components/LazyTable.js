@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Table, Typography, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow } from '@mui/material';
 
 // This component provides a paginated MUI table that fetches data only from the specified page.
 // This optimization is known as lazy loading. It is unnecessary for you to utilize this optimization
@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TablePagination
 // required will affect how you handle them in the code.
 export default function LazyTable({ route, columns, defaultPageSize, rowsPerPageOptions }) {
   const [data, setData] = useState([]);
-
+  const [clickedReview, setClickedReview] = useState(null);
   const [page, setPage] = useState(1); // 1 indexed
   const [pageSize, setPageSize] = useState(defaultPageSize ?? 10);
 
@@ -40,15 +40,85 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
     setPageSize(newPageSize);
     setPage(1);
 
-    
+
   }
 
+  const handleReviewClick = (review) => {
+    setClickedReview(review);
+  }
+
+  // const defaultRenderCell = (col, row) => {
+  //   return <div>{row[col.field]}</div>;
+  // }
   const defaultRenderCell = (col, row) => {
-    return <div>{row[col.field]}</div>;
+    if (col.field === 'review') {
+      const firstSentence = row[col.field].split('. ')[0];
+      if (clickedReview === row) {
+        return (
+          <TableCell>
+            <Typography variant="body2">{row[col.field]}</Typography>
+          </TableCell>
+        );
+      } else {
+        return (
+          <TableCell onClick={() => handleReviewClick(row)}>
+            <Typography variant="body2">{row.userName}: {firstSentence}.</Typography>
+          </TableCell>
+        );
+      }
+    } else {
+      return (
+        <TableCell>
+          <Typography variant="body2">{row[col.field]}</Typography>
+        </TableCell>
+      );
+    }
   }
 
+  // return (
+  //   <TableContainer>
+  //     <Table>
+  //       <TableHead>
+  //         <TableRow>
+  //           {columns.map(col => <TableCell key={col.headerName}>{col.headerName}</TableCell>)}
+  //         </TableRow>
+  //       </TableHead>
+  //       <TableBody>
+  //         {data.map((row, idx) =>
+  //           <TableRow key={idx}>
+  //             {
+  //               // TODO (TASK 19): the next 3 lines of code render only the first column. Modify this with a map statement to render all columns.
+  //               // Hint: look at how we structured the map statement to render all the table headings within the <TableHead> element
+  //               columns.map(col =>
+  //                 <TableCell
+  //                   key={col.headerName}
+  //                   sx={{
+  //                     width: '150px',
+  //                     height: '50px',
+  //                     whiteSpace: 'nowrap',
+  //                     overflow: 'hidden',
+  //                     textOverflow: 'ellipsis',
+  //                   }}>
+  //                   {col.renderCell ? col.renderCell(row) : defaultRenderCell(col, row)}
+  //                 </TableCell>
+  //               )
+  //             }
+  //           </TableRow>
+  //         )}
+  //       </TableBody>
+  //       <TablePagination
+  //         rowsPerPageOptions={rowsPerPageOptions ?? [5, 10, 25]}
+  //         count={-1}
+  //         rowsPerPage={pageSize}
+  //         page={page - 1}
+  //         onPageChange={handleChangePage}
+  //         onRowsPerPageChange={handleChangePageSize}
+  //       />
+  //     </Table>
+  //   </TableContainer>
+  // )
   return (
-    <TableContainer>
+    <TableContainer style={{ maxHeight: 600, maxWidth: 600 }}>
       <Table>
         <TableHead>
           <TableRow>
@@ -58,15 +128,11 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
         <TableBody>
           {data.map((row, idx) =>
             <TableRow key={idx}>
-              {
-                // TODO (TASK 19): the next 3 lines of code render only the first column. Modify this with a map statement to render all columns.
-                // Hint: look at how we structured the map statement to render all the table headings within the <TableHead> element
-                columns.map(col => 
-                  <TableCell 
-                    key={col.headerName}>{col.renderCell ? col.renderCell(row) : defaultRenderCell(col, row)} 
-                  </TableCell>
-                )
-              }
+              {columns.map(col =>
+                <React.Fragment key={col.headerName}>
+                  {defaultRenderCell(col, row)}
+                </React.Fragment>
+              )}
             </TableRow>
           )}
         </TableBody>

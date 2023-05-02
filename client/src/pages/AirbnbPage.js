@@ -21,7 +21,7 @@ import SongCard from '../components/AirbnbCard';
 import { getDistance } from '../helpers/formatter';
 const config = require('../config.json');
 
-export default function SongsPage() {
+export default function AirbnbPage() {
   const [pageSize, setPageSize] = useState(10);
   const [data, setData] = useState([]);
   const [selectedAirbnbId, setSelectedAirbnbId] = useState(null);
@@ -183,19 +183,19 @@ export default function SongsPage() {
             min={0}
             max={2000}
             step={10}
-            onChange={(e, newValue) => setPrice(newValue)}
+            onChange={(e) => setPrice(e.target.value)}
             valueLabelDisplay='auto'
             valueLabelFormat={value => <div>{value}</div>}
           />
         </Grid>
         <Grid item xs={4}>
-          <p>Duration of Stay</p>
+          <p>Duration of Stay (days)</p>
           <Slider
             value={length}
             min={0}
-            max={10}
+            max={14}
             step={1}
-            onChange={(e, newValue) => setLength(newValue)}
+            onChange={(e) => setLength(e.target.value)}
             valueLabelDisplay='auto'
             valueLabelFormat={value => <div>{value}</div>}
           />
@@ -203,17 +203,17 @@ export default function SongsPage() {
         {/* TODO (TASK 24): add sliders for danceability, energy, and valence (they should be all in the same row of the Grid) */}
         {/* Hint: consider what value xs should be to make them fit on the same row. Set max, min, and a reasonable step. Is valueLabelFormat is necessary? */}
         <Grid item xs={4}>
-          <p>Number of ratings</p>
+          <p>Number of reviews</p>
           <Slider
             value={minRatings}
             min={0}
-            max={966}
-            step={10}
-            onChange={(e, newValue) => setMinRatings(newValue)}
+            max={100}
+            step={5}
+            onChange={(e) => setMinRatings(e.target.value)}
             valueLabelDisplay='auto'
           />
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={6}>
           <p>Select an area</p>
           <Select value={city} onChange={(e) => {
             setCity(e.target.value);
@@ -225,7 +225,7 @@ export default function SongsPage() {
             ))}
           </Select>
         </Grid>
-        <Grid item xs={4}>
+        {/* <Grid item xs={4}>
           <p>Select neighbourhood</p>
           <Select value={neighbourhood} onChange={(e) => setNeighbourhood(e.target.value)} style={{ width: "100%" }}>
             <MenuItem value=''>Any</MenuItem>
@@ -235,8 +235,8 @@ export default function SongsPage() {
               </MenuItem>
             ))}
           </Select>
-        </Grid>
-        <Grid item xs={4} sx={{ mb: 5 }}>
+        </Grid> */}
+        <Grid item xs={6} sx={{ mb: 5 }}>
           <p>Select room type</p>
           <Select value={type} onChange={(e) => setType(e.target.value)} style={{ width: "100%" }}>
             <MenuItem value="Entire home/apt">Entire Home/Apartment</MenuItem>

@@ -4,10 +4,10 @@ import { indigo, amber } from '@mui/material/colors'
 import { createTheme } from "@mui/material/styles";
 
 import NavBar from './components/NavBar';
-import HomePage from './pages/HomePage';
+import JointPage from './pages/JointPage';
 import YelpPage from './pages/YelpPage';
 import AirbnbPage from './pages/AirbnbPage';
-import AlbumInfoPage from './pages/AlbumInfoPage'
+import AirbnbInfoPage from './pages/AirbnbInfoPage';
 
 // createTheme enables you to customize the look and feel of your app past the default
 // in this case, we only change the color scheme
@@ -29,9 +29,10 @@ export default function App() {
       <BrowserRouter>
         <NavBar />
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          {/* <Route path="/map" element={<MapPage />} /> */}
+          <Route path="/" element={<JointPage />} />
           <Route path="/yelp" element={<YelpPage />} />
-          <Route path="/albums/:album_id" element={<AlbumInfoPage />} />
+          <Route path="/albums/:album_id" element={<AirbnbInfoPage />} />
           <Route path="/airbnb" element={<AirbnbPage />} />
         </Routes>
       </BrowserRouter>

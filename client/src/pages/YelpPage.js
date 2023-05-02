@@ -4,6 +4,8 @@ import { DataGrid } from '@mui/x-data-grid';
 
 import SongCard from '../components/AirbnbCard';
 import { formatDuration } from '../helpers/formatter';
+import YelpCard from '../components/YelpCard';
+
 const config = require('../config.json');
 
 export default function SongsPage() {
@@ -76,18 +78,25 @@ export default function SongsPage() {
     fetch(`http://${config.server_host}:${config.server_port}/yelp?name=${name}` +
       `&state=${state}` +
       `&city=${city}` +
-      `&minReviews=${minReviews}` +
+      `&review_count=${minReviews}` +
       `&stars=${stars}` +
-      `&isOpen=${isOpen}`
+      `&is_open=${isOpen}`
     )
       .then(res => res.json())
       .then(resJson => {
         // DataGrid expects an array of objects with a unique id.
         // To accomplish this, we use a map with spread syntax (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
-        const yelpData = resJson.map((yelp) => ({ id: yelp.business_id, ...yelp }));
-        setData(yelpData);
+        // validate that resJson is not null
+        // console.log(resJson);
+        setData(
+          Object.keys(resJson).length === 0
+            ? []
+            : resJson.map((yelp) => ({ id: yelp.business_id, ...yelp }))
+        );
       });
-  }
+
+  };
+
 
   // This defines the columns of the table of songs used by the DataGrid component.
   // The format of the columns array and the DataGrid component itself is very similar to our
@@ -96,7 +105,10 @@ export default function SongsPage() {
   const columns = [
     {
       field: 'title', headerName: 'Name', width: 300, renderCell: (params) => (
-        <Link onClick={() => setSelectedYelpId(params.row.id)}>{params.row.name}</Link>
+        <Link onClick={() => {
+          console.log(params.row.business_id);
+          setSelectedYelpId(params.row.id);
+        }}>{params.row.name}</Link>
       )
     },
     { field: 'review_count', headerName: '# of Reviews', width: 105 },
@@ -119,45 +131,22 @@ export default function SongsPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {/* {selectedYelpId && <YelpCard airbnbId={selectedYelpId} handleClose={() => setSelectedYelpId(null)} />} */}
-      <h2>Find Yelp Businesse</h2>
+      {selectedYelpId && <YelpCard yelpId={selectedYelpId} handleClose={() => setSelectedYelpId(null)} />}
+      <h2>Find Yelp Businesses</h2>
       <Grid container spacing={6}>
-        <Grid item xs={8}>
-          <TextField label='Business Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
+        <Grid item xs={10}>
+          <TextField label='Search by Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={2}>
           <FormControlLabel
-            value='is_open'
-            control={<Checkbox size='large' value={isOpen} onChange={(e) => setIsOpen(e.target.value)} />}
+            value={isOpen}
+            control={<Checkbox size='large' onChange={(e) => {
+              setIsOpen(e.target.checked);
+            }} />}
             label="Open?"
           />
         </Grid>
-        <Grid item xs={4}>
-          <p>Number of Rooms</p>
-          <Slider
-            value={minReviews}
-            min={0}
-            max={10}
-            step={1}
-            onChange={(e, newValue) => setMinReviews(newValue)}
-            valueLabelDisplay='auto'
-            valueLabelFormat={value => <div>{value}</div>}
-          />
-        </Grid>
-        {/* TODO (TASK 24): add sliders for danceability, energy, and valence (they should be all in the same row of the Grid) */}
-        {/* Hint: consider what value xs should be to make them fit on the same row. Set max, min, and a reasonable step. Is valueLabelFormat is necessary? */}
-        <Grid item xs={4}>
-          <p>Stars (0-5)</p>
-          <Slider
-            value={stars}
-            min={0}
-            max={5}
-            step={0.1}
-            onChange={(e, newValue) => setStars(newValue)}
-            valueLabelDisplay='auto'
-          />
-        </Grid>
-        <Grid item xs={6} sx={{ mb: 5 }}>
+        <Grid item xs={6}>
           <p>Select state</p>
           <Select value={state} onChange={(e) => setState(e.target.value)} style={{ width: "100%" }}>
             {states.map((state) => (
@@ -191,14 +180,41 @@ export default function SongsPage() {
           <Select value={city} onChange={(e) => setCity(e.target.value)} style={{ width: "100%" }}>
             <MenuItem value=''>Any</MenuItem>
             {cities.map((city) => (
-              <MenuItem key={city.city} value={city.city}>
-                {city.city}
+              <MenuItem key={city.cleaned_city} value={city.cleaned_city}>
+                {city.cleaned_city}
               </MenuItem>
             ))}
           </Select>
         </Grid>
+        <Grid item xs={6} sx={{ mb: 5 }}>
+          <p>Number of Reviews</p>
+          <Slider
+            value={minReviews}
+            min={0}
+            max={100}
+            step={5}
+            onChange={(e) => setMinReviews(e.target.value)}
+            valueLabelDisplay='auto'
+            valueLabelFormat={value => <div>{value}</div>}
+          />
+        </Grid>
+        {/* TODO (TASK 24): add sliders for danceability, energy, and valence (they should be all in the same row of the Grid) */}
+        {/* Hint: consider what value xs should be to make them fit on the same row. Set max, min, and a reasonable step. Is valueLabelFormat is necessary? */}
+        <Grid item xs={6}>
+          <p>Rating (0-5)</p>
+          <Slider
+            value={stars}
+            min={0}
+            max={5}
+            step={0.1}
+            onChange={(e) => setStars(e.target.value)}
+            valueLabelDisplay='auto'
+          />
+        </Grid>
+
       </Grid>
-      <Button onClick={() => search()} style={{ left: '50%', transform: 'translateX(-50%)' }}>
+      {/** center this button in the page by putting it inside an MUI component */}
+      <Button variant="contained" onClick={() => search()} style={{ left: '50%', transform: 'translateX(-50%)' }}>
         Search
       </Button>
       <h2>Results</h2>
