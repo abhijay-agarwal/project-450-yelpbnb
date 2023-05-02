@@ -40,15 +40,15 @@ const author = async function(req, res) {
  * AIRBNB QUERIES *
  ********************************/
 
-// Route 1: GET /airbnb/:city/:minRatingCount/:roomType/:price_min/:price_max/:state
+// Route 1: GET /airbnb/:city/:minRatingCount/:roomType/:price_min/:price_max/:availability
 const airbnbFilter = async function(req, res) {
   //all queries = def or 0 if defaulted
   const cityName = req.query.city;
-  const minRatingCount = req.query.ratingCount ?? 0;   //lower bound on the number of ratings
+  const minRatingCount = parseInt(req.query.ratingCount, 10) ?? 0;   //lower bound on the number of ratings
   const roomType = req.query.room_type ?? '';
   const price_min = parseInt(req.query.price_min, 10) ?? 0;
   const price_max = parseInt(req.query.price_max, 10) ?? 100000;
-  const state = req.query.state ?? '';
+  const availability_min = parseInt(req.query.price_max, 10) ?? 0; //minimum night availability out of 365
 
   let sortOrder = "";
   if (req.query.sort === "1") {
@@ -60,17 +60,17 @@ const airbnbFilter = async function(req, res) {
   }
 
   let airbnbquery1 = 
-  `SELECT *
+  `
+  SELECT id, name, host_name, price, minimum_nights, number_of_reviews, availability_365, city
   FROM airbnb a
   WHERE a.city = '${cityName}'
   AND a.number_of_reviews > ${minRatingCount}
   AND a.room_type LIKE '%${roomType}%'
-  AND a.price >= ${price_min}
-  AND a.price <= ${price_max}
-  AND a.state = LIKE '%${state}%'`;
+  AND a.price BETWEEN ${price_min} AND ${price_max}
+  AND a.availability_365 >= ${availability_min}`;
 
   if (sortOrder !== "") {
-    airbnbquery1 += " ORDER BY a.price" + sortOrder;
+    airbnbquery1 += " ORDER BY a.price LIMIT 100" + sortOrder;
   }
 
   connection.query(airbnbquery1, (err, data) => {
@@ -84,14 +84,15 @@ const airbnbFilter = async function(req, res) {
 }
 
 // Route 2: GET /airbnb/:airbnbid
-// display name, neighbourhood, host_name, price, minimum_nights, number_of_reviews, availability_365, city for each airbnb
+// display name, host_name, price, minimum_nights, number_of_reviews, availability_365, city for each airbnb
 const airbnb = async function(req, res) {
   const id = req.params.airbnbid;
 
   connection.query(`
-    SELECT name, neighbourhood, host_name, price, minimum_nights, number_of_reviews, availability_365
+    SELECT id, name, host_name, price, minimum_nights, number_of_reviews, availability_365, city
     FROM airbnb
     WHERE id = ${id}
+    LIMIT 1
     `, (err, data) => {
     if (err || data.length === 0) {
       console.log(err);
@@ -107,11 +108,11 @@ const airbnbRanked = async function(req, res) {
   // return the ranking of airbnbs in a city
   const city = req.query.city;
   connection.query(`
-      SELECT (@rank := @rank + 1) AS ranking, name, number_of_reviews, price, (number_of_reviews/price) AS point
+      SELECT id, (@rank := @rank + 1) AS ranking, name, number_of_reviews, price, (number_of_reviews/price) AS point
       FROM airbnb, (SELECT @rank := 0) r
       WHERE city = '${city}'
       ORDER BY point DESC
-      LIMIT 20;
+      LIMIT 50;
     `, (err, data) => {
     if (err || data.length === 0) {
       console.log(err);
@@ -130,10 +131,10 @@ const yelpFilter = async function(req, res) {
   //all queries = def or 0 if defaulted
   const cityName = req.query.city;
   const open = req.query.is_open === 'true' ? 1 : 0;   //1 is open, 0 is both
-  const stars = req.query.star; // minimum stars
-  const review_count = req.query.review_count; // minimum review_count
+  const stars = parseInt(req.query.stars, 10) ?? 0;; // minimum stars
+  const review_count = parseInt(req.query.review_count, 10) ?? 0; // minimum review_count
 
-  let sortOrder = "";  //sort by business name
+  let sortOrder = "";  
   if (req.query.sort === "1") {
     sortOrder = "DESC";
   } else if (req.query.sort === "2") {
@@ -144,17 +145,19 @@ const yelpFilter = async function(req, res) {
 
   let yelpquery = 
   `
-  USE yelp
-
-  SELECT *
-  FROM businesses b
-  WHERE b.city = '${cityName}'
-  AND b.review_count >= ${review_count}
-  AND b.stars >= ${stars}
-  AND b.is_open = ${open}`;
+  SELECT b.business_id, b.name, b.address, b.city, b.stars, b.review_count
+  FROM (
+    SELECT * 
+    FROM businesses 
+    WHERE b.city = '${cityName}'
+    AND b.review_count >= ${review_count}
+    AND b.stars >= ${stars}
+    AND b.is_open = ${open}
+   ) b 
+   `;
 
   if (sortOrder !== "") {
-    airbnbquery1 += " ORDER BY b.name" + sortOrder;
+    airbnbquery1 += " ORDER BY b.stars DESC, b.review_count DESC LIMIT 100" + sortOrder;
   }
 
   connection.query(yelpquery, (err, data) => {
@@ -167,17 +170,20 @@ const yelpFilter = async function(req, res) {
   });
 }
 
-//Route 5: GET /yelp/:id
+//Route 5: GET /yelp/:id/:name
 // display information for business
 const yelpBusinesses = async function(req, res) {
+  const name = req.query.name;
   const id = req.params.id;
 
   connection.query(`
-    USE yelp
-
-    SELECT *
-    FROM businesses b
-    WHERE id = ${id}
+    SELECT business_id, name, address, city, stars, review_count
+    FROM businesses
+    WHERE business_id = '${id}'
+    UNION
+    SELECT business_id, name, address, city, stars, review_count
+    FROM businesses
+    WHERE name = '${name}';
     `, (err, data) => {
     if (err || data.length === 0) {
       console.log(err);
@@ -188,37 +194,14 @@ const yelpBusinesses = async function(req, res) {
   }); 
 }
 
-//Route 6: GET /yelp/:id/review
-// display lists of review for yelp businesses
-const yelpBusinessesReviews = async function(req, res) {
-  const id = req.params.id;
-
-  connection.query(`
-    USE yelp
-
-    SELECT text, stars, useful, funny, cool
-    FROM reviews
-    WHERE business_id = '${id}'
-    AND CAST(SUBSTR(date, 1, 4) AS UNSIGNED) >= 2015;
-    ORDER BY useful DESC, funny DESC, cool DESC
-    `, (err, data) => {
-    if (err || data.length === 0) {
-      console.log(err);
-      res.json({});
-    } else {
-      res.json(data);
-    }
-  }); 
-}
-
-// Route 7: GET /yelp/ranking/:city/
+// Route 6: GET /yelp/ranking/:city
 const yelpRanking = async function(req, res) {
   // return the ranking of airbnbs in a city
   const city = req.query.city;
   connection.query(`
-      SELECT (@rank := @rank + 1) AS ranking, name, stars, review_count
+      SELECT business_id, (@rank := @rank + 1) AS ranking, name, stars, review_count
       FROM businesses b, (SELECT @rank := 0) r
-      WHERE city = ${city}
+      WHERE city = '${city}'
       ORDER BY stars DESC, review_count DESC
       LIMIT 20;
     `, (err, data) => {
@@ -230,6 +213,32 @@ const yelpRanking = async function(req, res) {
     }
   });
 }
+
+/************************
+ * COMPLEX QUERIES THAT JOIN TWO TABLES *
+ ************************/
+
+//Route 7: GET /yelp/:id/review
+// join reviews, users, and businesses tables to list reviews and their corresponding user for a specific business
+const yelpBusinessesReviews = async function(req, res) {
+  const id = req.params.id;
+
+  connection.query(`
+    SELECT u.name, r.text, r.stars, r.useful, r.funny, r.cool
+    FROM reviews r
+    JOIN users u ON r.user_id = u.user_id
+    WHERE business_id = '${id}'
+    ORDER BY useful DESC, stars DESC, funny DESC, cool DESC  
+    `, (err, data) => {
+    if (err || data.length === 0) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data);
+    }
+  }); 
+}
+
 
 // Route 8: GET /yelp/users/:id
 // display name, review_count, yelping_since, useful, funny, cool for yelp user
@@ -253,9 +262,7 @@ const yelpUsers = async function(req, res) {
 }
 
 
-/************************
- * COMPLEX QUERIES THAT JOIN TWO TABLES *
- ************************/
+
 
 // Route 9: GET /
 const combineOnLocation = async function(req, res) {
