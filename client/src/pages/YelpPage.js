@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Checkbox, Container, FormLabel, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel } from '@mui/material';
+import { Button, MenuItem, Container, FormLabel, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel, RadioGroup, Select, Checkbox } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import SongCard from '../components/SongCard';
@@ -9,7 +9,7 @@ const config = require('../config.json');
 export default function SongsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [data, setData] = useState([]);
-  const [selectedSongId, setSelectedSongId] = useState(null);
+  const [selectedAirbnbId, setSelectedAirbnbId] = useState(null);
 
   // choose if you're searching for AirBnB's or Yelp restaurants
   const [searchType, setSearchType] = useState('airbnb');
@@ -17,10 +17,11 @@ export default function SongsPage() {
 
   const [rating, setRating] = useState([0, 5]);
   const [city, setCity] = useState('');
-  const [type, setType] = useState('');
-  const [numRooms, setNumRooms] = useState([0, 10]);
+  const [numRatings, setNumRatings] = useState([0, 10]);
   const [price, setPrice] = useState([0, 2000]);
+  const [isOpen, setIsOpen] = useState(false);
   const [state, setState] = useState('');
+  const [cities, setCities] = useState([]);
 
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/search_songs`)
@@ -31,14 +32,22 @@ export default function SongsPage() {
       });
   }, []);
 
+  // update the cities array every time the state changes
+  useEffect(() => {
+    fetch(`http://${config.server_host}:${config.server_port}/cities?state=${state}`)
+      .then(res => res.json())
+      .then(resJson => {
+        setCities(resJson);
+      });
+  }, [state]);
+
   const search = () => {
     fetch(`http://${config.server_host}:${config.server_port}/search_songs?title=${name}` +
       `&rating_low=${rating[0]}&rating_high=${rating[1]}` +
       `&city=${city}` +
-      `&numRooms_low=${numRooms[0]}&numRooms_high=${numRooms[1]}` +
       `&price_low=${price[0]}&price_high=${price[1]}` +
-      `&valence=${state}` +
-      `&airBnbType=${type}`
+      `&numRatings_low=${numRatings[0]}&numRatings_high=${numRatings[1]}` +
+      `&isOpen=${isOpen}`
 
       // copy the above link but change the variables to match the ones you added
       // to the search query in the server
@@ -48,7 +57,7 @@ export default function SongsPage() {
       .then(resJson => {
         // DataGrid expects an array of objects with a unique id.
         // To accomplish this, we use a map with spread syntax (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
-        const songsWithId = resJson.map((song) => ({ id: song.song_id, ...song }));
+        const songsWithId = resJson.map((airbnb) => ({ id: airbnb.id, ...airbnb }));
         setData(songsWithId);
       });
   }
@@ -59,18 +68,16 @@ export default function SongsPage() {
   // instead of loading only the data we need (which is necessary in order to be able to sort by column)
   const columns = [
     {
-      field: 'title', headerName: 'Title', width: 300, renderCell: (params) => (
-        <Link onClick={() => setSelectedSongId(params.row.song_id)}>{params.value}</Link>
+      field: 'title', headerName: 'Name', width: 300, renderCell: (params) => (
+        <Link onClick={() => setSelectedAirbnbId(params.row.id)}>{params.value}</Link>
       )
     },
-    { field: 'duration', headerName: 'Duration' },
-    { field: 'plays', headerName: 'Plays' },
-    { field: 'danceability', headerName: 'Danceability' },
-    { field: 'energy', headerName: 'Energy' },
-    { field: 'valence', headerName: 'Valence' },
-    { field: 'tempo', headerName: 'Tempo' },
-    { field: 'key_mode', headerName: 'Key' },
-    { field: 'explicit', headerName: 'Explicit' },
+    { field: 'host_name', headerName: 'Host Name', width: 90 },
+    { field: 'neighborhood', headerName: 'Neighborhood', width: 110 },
+    { field: 'price', headerName: 'Price', width: 50 },
+    { field: 'minimum_nights', headerName: 'Min Nights', width: 85 },
+    { field: 'number_of_reviews', headerName: '# of Reviews', width: 105 },
+    { field: 'city', headerName: 'City', width: 100 },
   ]
 
   // This component makes uses of the Grid component from MUI (https://mui.com/material-ui/react-grid/).
@@ -82,24 +89,20 @@ export default function SongsPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {selectedSongId && <SongCard songId={selectedSongId} handleClose={() => setSelectedSongId(null)} />}
-      <h2>Search AirBnBs and Yelp Businesses</h2>
+      {selectedAirbnbId && <SongCard airbnbId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />}
+      <h2>Find AirBnBs</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>
           <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
         </Grid>
         <Grid item xs={4}>
-          <FormControl>
-            <FormLabel id="demo-radio-buttons-group-label">What are you searching for?</FormLabel>
-            <FormControlLabel
-              value='AirBnB'
-              control={<Radio />}
-              label="AirBnB"
-            />
-            <FormControlLabel value="Yelp" control={<Radio />} label="Yelp" />
-          </FormControl>
+          <FormControlLabel
+            value='is_open'
+            control={<Checkbox value={isOpen} onChange={(e) => setIsOpen(e.target.value)} />}
+            label="Open Now"
+          />
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={4}>
           <p>Price ($USD per night)</p>
           <Slider
             value={price}
@@ -111,22 +114,22 @@ export default function SongsPage() {
             valueLabelFormat={value => <div>{value}</div>}
           />
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={4}>
           <p>Number of Rooms</p>
           <Slider
-            value={numRooms}
+            value={numRatings}
             min={0}
             max={10}
             step={1}
-            onChange={(e, newValue) => setNumRooms(newValue)}
+            onChange={(e, newValue) => setNumRatings(newValue)}
             valueLabelDisplay='auto'
             valueLabelFormat={value => <div>{value}</div>}
           />
         </Grid>
         {/* TODO (TASK 24): add sliders for danceability, energy, and valence (they should be all in the same row of the Grid) */}
         {/* Hint: consider what value xs should be to make them fit on the same row. Set max, min, and a reasonable step. Is valueLabelFormat is necessary? */}
-        <Grid item xs={6}>
-          <p>Rating (0-5)</p>
+        <Grid item xs={4}>
+          <p>Stars (0-5)</p>
           <Slider
             value={rating}
             min={0}
@@ -135,6 +138,45 @@ export default function SongsPage() {
             onChange={(e, newValue) => setRating(newValue)}
             valueLabelDisplay='auto'
           />
+        </Grid>
+        <Grid item xs={6}>
+          <p>Select state</p>
+          <Select value={state} onChange={(e) => setState(e.target.value)} style={{ width: "100%" }}>
+            <MenuItem value=''>Any</MenuItem>
+            <MenuItem value='PA'>PA</MenuItem>
+            <MenuItem value='FL'>FL</MenuItem>
+            <MenuItem value='MO'>MO</MenuItem>
+            <MenuItem value='AZ'>AZ</MenuItem>
+            <MenuItem value='LA'>LA</MenuItem>
+            <MenuItem value='IN'>IN</MenuItem>
+            <MenuItem value='NV'>NV</MenuItem>
+            <MenuItem value='ID'>ID</MenuItem>
+            <MenuItem value='TN'>TN</MenuItem>
+            <MenuItem value='AB'>AB</MenuItem>
+            <MenuItem value='IL'>IL</MenuItem>
+            <MenuItem value='CA'>CA</MenuItem>
+            <MenuItem value='NJ'>NJ</MenuItem>
+            <MenuItem value='DE'>DE</MenuItem>
+            <MenuItem value='HI'>HI</MenuItem>
+            <MenuItem value='CO'>CO</MenuItem>
+            <MenuItem value='MI'>MI</MenuItem>
+            <MenuItem value='NC'>NC</MenuItem>
+            <MenuItem value='UT'>UT</MenuItem>
+            <MenuItem value='VT'>VT</MenuItem>
+            <MenuItem value='MT'>MT</MenuItem>
+            <MenuItem value='MA'>MA</MenuItem>
+            <MenuItem value='XMS'>XMS</MenuItem>
+            <MenuItem value='TX'>TX</MenuItem>
+            <MenuItem value='WA'>WA</MenuItem>
+            <MenuItem value='VI'>VI</MenuItem>
+            <MenuItem value='SD'>SD</MenuItem>
+          </Select>
+        </Grid>
+        <Grid item xs={6}>
+          <p>Select city</p>
+          <Select value={city} onChange={(e) => setCity(e.target.value)} style={{ width: "100%" }}>
+            {(cities.length === 0) ? (cities.map((city) => <MenuItem value={city}>{city}</MenuItem>)) : (<MenuItem value=''>Any</MenuItem>)}
+          </Select>
         </Grid>
       </Grid>
       <Button onClick={() => search()} style={{ left: '50%', transform: 'translateX(-50%)' }}>
@@ -150,6 +192,6 @@ export default function SongsPage() {
         onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
         autoHeight
       />
-    </Container>
+    </Container >
   );
 }

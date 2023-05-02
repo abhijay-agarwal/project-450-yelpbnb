@@ -59,18 +59,16 @@ export default function SongsPage() {
   // instead of loading only the data we need (which is necessary in order to be able to sort by column)
   const columns = [
     {
-      field: 'title', headerName: 'Title', width: 300, renderCell: (params) => (
-        <Link onClick={() => setSelectedAirbnbId(params.row.song_id)}>{params.value}</Link>
+      field: 'title', headerName: 'Name', width: 300, renderCell: (params) => (
+        <Link onClick={() => setSelectedAirbnbId(params.row.id)}>{params.value}</Link>
       )
     },
-    { field: 'duration', headerName: 'Duration' },
-    { field: 'plays', headerName: 'Plays' },
-    { field: 'danceability', headerName: 'Danceability' },
-    { field: 'energy', headerName: 'Energy' },
-    { field: 'valence', headerName: 'Valence' },
-    { field: 'tempo', headerName: 'Tempo' },
-    { field: 'key_mode', headerName: 'Key' },
-    { field: 'explicit', headerName: 'Explicit' },
+    { field: 'host_name', headerName: 'Host Name', width: 90 },
+    { field: 'neighborhood', headerName: 'Neighborhood', width: 110 },
+    { field: 'price', headerName: 'Price', width: 50 },
+    { field: 'minimum_nights', headerName: 'Min Nights', width: 85 },
+    { field: 'number_of_reviews', headerName: '# of Reviews', width: 105 },
+    { field: 'city', headerName: 'City', width: 100 },
   ]
 
   // This component makes uses of the Grid component from MUI (https://mui.com/material-ui/react-grid/).
@@ -82,7 +80,7 @@ export default function SongsPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {selectedAirbnbId && <SongCard songId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />}
+      {selectedAirbnbId && <SongCard airbnbId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />}
       <h2>Find AirBnBs</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>

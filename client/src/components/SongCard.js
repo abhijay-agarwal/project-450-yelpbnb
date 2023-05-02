@@ -10,7 +10,7 @@ const config = require('../config.json');
 // Typically, modals will conditionally appear (specified by the Modal's open property)
 // but in our implementation whether the Modal is open is handled by the parent component
 // (see HomePage.js for example), since it depends on the state (selectedSongId) of the parent
-export default function SongCard({ songId, handleClose }) {
+export default function SongCard({ airbnbId, handleClose }) {
   const [songData, setSongData] = useState({});
   const [albumData, setAlbumData] = useState({});
 
@@ -20,7 +20,7 @@ export default function SongCard({ songId, handleClose }) {
   // Hint: you need to both fill in the callback and the dependency array (what variable determines the information you need to fetch?)
   // Hint: since the second fetch depends on the information from the first, try nesting the second fetch within the then block of the first (pseudocode is provided)
   useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/song/${songId}`)
+    fetch(`http://${config.server_host}:${config.server_port}/song/${airbnbId}`)
       .then(res => res.json())
       .then(resJson => {
         setSongData(resJson);
@@ -28,16 +28,16 @@ export default function SongCard({ songId, handleClose }) {
           .then(res => res.json())
           .then(resJson => setAlbumData(resJson))
       })
-  }, [songId]);
-    // Hint: here is some pseudocode to guide you
-    // fetch(song data, id determined by songId prop)
-    //   .then(res => res.json())
-    //   .then(resJson => {
-    //     set state variable with song data
-    //     fetch(album data, id determined by result in resJson)
-    //       .then(res => res.json())
-    //       .then(resJson => set state variable with album data)
-    //     })
+  }, [airbnbId]);
+  // Hint: here is some pseudocode to guide you
+  // fetch(song data, id determined by songId prop)
+  //   .then(res => res.json())
+  //   .then(resJson => {
+  //     set state variable with song data
+  //     fetch(album data, id determined by result in resJson)
+  //       .then(res => res.json())
+  //       .then(resJson => set state variable with album data)
+  //     })
 
   const chartData = [
     { name: 'Danceability', value: songData.danceability },
@@ -90,7 +90,7 @@ export default function SongCard({ songId, handleClose }) {
                   <RadarChart data={chartData} outerRadius={100}>
                     <PolarGrid />
                     <PolarAngleAxis dataKey="name" />
-                    <PolarRadiusAxis angle={30} domain={[0, 1]}/>
+                    <PolarRadiusAxis angle={30} domain={[0, 1]} />
                     <Radar dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
                   </RadarChart>
                   {/* TODO (TASK 21): display the same data as the bar chart using a radar chart */}
