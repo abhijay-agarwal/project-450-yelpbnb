@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Checkbox, Container, FormControlLabel, Grid, Link, Slider, TextField } from '@mui/material';
+import { Button, Checkbox, Container, FormLabel, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import SongCard from '../components/SongCard';
@@ -11,13 +11,16 @@ export default function SongsPage() {
   const [data, setData] = useState([]);
   const [selectedSongId, setSelectedSongId] = useState(null);
 
-  const [title, setTitle] = useState('');
-  const [duration, setDuration] = useState([60, 660]);
-  const [plays, setPlays] = useState([0, 1100000000]);
-  const [danceability, setDanceability] = useState([0, 1]);
-  const [energy, setEnergy] = useState([0, 1]);
-  const [valence, setValence] = useState([0, 1]);
-  const [explicit, setExplicit] = useState(false);
+  // choose if you're searching for AirBnB's or Yelp restaurants
+  const [searchType, setSearchType] = useState('airbnb');
+  const [name, setName] = useState('');
+
+  const [rating, setRating] = useState([0, 5]);
+  const [city, setCity] = useState('');
+  const [type, setType] = useState('');
+  const [numRooms, setNumRooms] = useState([0, 10]);
+  const [price, setPrice] = useState([0, 2000]);
+  const [state, setState] = useState('');
 
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/search_songs`)
@@ -29,13 +32,17 @@ export default function SongsPage() {
   }, []);
 
   const search = () => {
-    fetch(`http://${config.server_host}:${config.server_port}/search_songs?title=${title}` +
-      `&duration_low=${duration[0]}&duration_high=${duration[1]}` +
-      `&plays_low=${plays[0]}&plays_high=${plays[1]}` +
-      `&danceability_low=${danceability[0]}&danceability_high=${danceability[1]}` +
-      `&energy_low=${energy[0]}&energy_high=${energy[1]}` +
-      `&valence_low=${valence[0]}&valence_high=${valence[1]}` +
-      `&explicit=${explicit}`
+    fetch(`http://${config.server_host}:${config.server_port}/search_songs?title=${name}` +
+      `&rating_low=${rating[0]}&rating_high=${rating[1]}` +
+      `&city=${city}` +
+      `&numRooms_low=${numRooms[0]}&numRooms_high=${numRooms[1]}` +
+      `&price_low=${price[0]}&price_high=${price[1]}` +
+      `&valence=${state}` +
+      `&airBnbType=${type}`
+
+      // copy the above link but change the variables to match the ones you added
+      // to the search query in the server
+      
     )
       .then(res => res.json())
       .then(resJson => {
@@ -74,73 +81,56 @@ export default function SongsPage() {
   return (
     <Container>
       {selectedSongId && <SongCard songId={selectedSongId} handleClose={() => setSelectedSongId(null)} />}
-      <h2>Search Songs</h2>
+      <h2>Search AirBnBs and Yelp Businesses</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>
-          <TextField label='Title' value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: "100%" }}/>
+          <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }}/>
         </Grid>
         <Grid item xs={4}>
+        <FormControl>
+      <FormLabel id="demo-radio-buttons-group-label">What are you searching for?</FormLabel>
           <FormControlLabel
-            label='Explicit'
-            control={<Checkbox checked={explicit} onChange={(e) => setExplicit(e.target.checked)} />}
+            value='AirBnB'
+            control={<Radio />}
+            label="AirBnB"
           />
+          <FormControlLabel value="Yelp" control={<Radio />} label="Yelp" />
+          </FormControl>
         </Grid>
         <Grid item xs={6}>
-          <p>Duration</p>
+          <p>Price ($USD per night)</p>
           <Slider
-            value={duration}
-            min={60}
-            max={660}
-            step={10}
-            onChange={(e, newValue) => setDuration(newValue)}
-            valueLabelDisplay='auto'
-            valueLabelFormat={value => <div>{formatDuration(value)}</div>}
-          />
-        </Grid>
-        <Grid item xs={6}>
-          <p>Plays (millions)</p>
-          <Slider
-            value={plays}
+            value={price}
             min={0}
-            max={1100000000}
-            step={10000000}
-            onChange={(e, newValue) => setPlays(newValue)}
+            max={2000}
+            step={10}
+            onChange={(e, newValue) => setPrice(newValue)}
             valueLabelDisplay='auto'
-            valueLabelFormat={value => <div>{value / 1000000}</div>}
+            valueLabelFormat={value => <div>{value}</div>}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <p>Number of Rooms</p>
+          <Slider
+            value={numRooms}
+            min={0}
+            max={10}
+            step={1}
+            onChange={(e, newValue) => setNumRooms(newValue)}
+            valueLabelDisplay='auto'
+            valueLabelFormat={value => <div>{value}</div>}
           />
         </Grid>
         {/* TODO (TASK 24): add sliders for danceability, energy, and valence (they should be all in the same row of the Grid) */}
         {/* Hint: consider what value xs should be to make them fit on the same row. Set max, min, and a reasonable step. Is valueLabelFormat is necessary? */}
-        <Grid item xs={4}>
-          <p>Danceability</p>
+        <Grid item xs={6}>
+          <p>Rating (0-5)</p>
           <Slider
-            value={danceability}
+            value={rating}
             min={0}
-            max={1}
-            step={0.01}
-            onChange={(e, newValue) => setDanceability(newValue)}
-            valueLabelDisplay='auto'
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <p>Energy</p>
-          <Slider
-            value={energy}
-            min={0}
-            max={1}
-            step={0.01}
-            onChange={(e, newValue) => setEnergy(newValue)}
-            valueLabelDisplay='auto'
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <p>Valence</p>
-          <Slider
-            value={valence}
-            min={0}
-            max={1}
-            step={0.01}
-            onChange={(e, newValue) => setValence(newValue)}
+            max={5}
+            step={0.1}
+            onChange={(e, newValue) => setRating(newValue)}
             valueLabelDisplay='auto'
           />
         </Grid>
