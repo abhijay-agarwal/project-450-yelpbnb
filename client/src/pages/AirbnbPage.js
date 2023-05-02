@@ -145,8 +145,8 @@ export default function SongsPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {selectedAirbnbId && <SongCard airbnbId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />}
-      <h2>Find AirBnBs</h2>
+      {/* {selectedAirbnbId && <AirbnbCard airbnbId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />} */}
+      <h2>Find Your Perfect AirBnB</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>
           <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
