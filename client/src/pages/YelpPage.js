@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, MenuItem, Container, InputLabel, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel, RadioGroup, Select, Checkbox } from '@mui/material';
+import { Button, MenuItem, Container, Autocomplete, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel, RadioGroup, Select, Checkbox } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import SongCard from '../components/SongCard';
@@ -9,30 +9,60 @@ const config = require('../config.json');
 export default function SongsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [data, setData] = useState([]);
-  const [selectedAirbnbId, setSelectedAirbnbId] = useState(null);
+  const [selectedYelpId, setSelectedYelpId] = useState(null);
 
   // choose if you're searching for AirBnB's or Yelp restaurants
   const [searchType, setSearchType] = useState('airbnb');
   const [name, setName] = useState('');
 
-  const [rating, setRating] = useState([0, 5]);
+  const [stars, setStars] = useState(0);
   const [city, setCity] = useState('');
-  const [numRatings, setNumRatings] = useState([0, 10]);
-  const [price, setPrice] = useState([0, 2000]);
+  const [minReviews, setMinReviews] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [state, setState] = useState('');
   const [cities, setCities] = useState([]);
 
+  const states = [
+    { value: '', label: 'Any' },
+    { value: 'AB', label: 'Alberta' },
+    { value: 'AZ', label: 'Arizona' },
+    { value: 'CA', label: 'California' },
+    { value: 'CO', label: 'Colorado' },
+    { value: 'DE', label: 'Delaware' },
+    { value: 'FL', label: 'Florida' },
+    { value: 'HI', label: 'Hawaii' },
+    { value: 'ID', label: 'Idaho' },
+    { value: 'IL', label: 'Illinois' },
+    { value: 'IN', label: 'Indiana' },
+    { value: 'LA', label: 'Louisiana' },
+    { value: 'MA', label: 'Massachusetts' },
+    { value: 'MI', label: 'Michigan' },
+    { value: 'MO', label: 'Missouri' },
+    { value: 'NC', label: 'North Carolina' },
+    { value: 'NV', label: 'Nevada' },
+    { value: 'NJ', label: 'New Jersey' },
+    { value: 'NY', label: 'New York' },
+    { value: 'OR', label: 'Oregon' },
+    { value: 'PA', label: 'Pennsylvania' },
+    { value: 'RI', label: 'Rhode Island' },
+    { value: 'SD', label: 'South Dakota' },
+    { value: 'TN', label: 'Tennessee' },
+    { value: 'TX', label: 'Texas' },
+    { value: 'UT', label: 'Utah' },
+    { value: 'VI', label: 'Virgin Islands' },
+    { value: 'VT', label: 'Vermont' },
+    { value: 'WA', label: 'Washington' },
+  ];
+
   useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/search_songs`)
+    fetch(`http://${config.server_host}:${config.server_port}/yelp`)
       .then(res => res.json())
       .then(resJson => {
-        const songsWithId = resJson.map((song) => ({ id: song.song_id, ...song }));
-        setData(songsWithId);
+        const yelpData = resJson.map((yelp) => ({ id: yelp.business_id, ...yelp }));
+        setData(yelpData);
       });
   }, []);
-
-  // update the cities array every time the state changes
+  // update the values in the cities cities array whenever a new state is chosen
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/cities?state=${state}`)
       .then(res => res.json())
@@ -41,24 +71,20 @@ export default function SongsPage() {
       });
   }, [state]);
 
+
   const search = () => {
-    fetch(`http://${config.server_host}:${config.server_port}/search_songs?title=${name}` +
-      `&rating_low=${rating[0]}&rating_high=${rating[1]}` +
+    fetch(`http://${config.server_host}:${config.server_port}/yelp?state=${state}` +
       `&city=${city}` +
-      `&price_low=${price[0]}&price_high=${price[1]}` +
-      `&numRatings_low=${numRatings[0]}&numRatings_high=${numRatings[1]}` +
+      `&minReviews=${minReviews}` +
+      `&stars=${stars}` +
       `&isOpen=${isOpen}`
-
-      // copy the above link but change the variables to match the ones you added
-      // to the search query in the server
-
     )
       .then(res => res.json())
       .then(resJson => {
         // DataGrid expects an array of objects with a unique id.
         // To accomplish this, we use a map with spread syntax (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
-        const songsWithId = resJson.map((airbnb) => ({ id: airbnb.id, ...airbnb }));
-        setData(songsWithId);
+        const yelpData = resJson.map((yelp) => ({ id: yelp.business_id, ...yelp }));
+        setData(yelpData);
       });
   }
 
@@ -69,15 +95,14 @@ export default function SongsPage() {
   const columns = [
     {
       field: 'title', headerName: 'Name', width: 300, renderCell: (params) => (
-        <Link onClick={() => setSelectedAirbnbId(params.row.id)}>{params.value}</Link>
+        <Link onClick={() => setSelectedYelpId(params.row.id)}>{params.row.name}</Link>
       )
     },
-    { field: 'host_name', headerName: 'Host Name', width: 90 },
-    { field: 'neighborhood', headerName: 'Neighborhood', width: 110 },
-    { field: 'price', headerName: 'Price', width: 50 },
-    { field: 'minimum_nights', headerName: 'Min Nights', width: 85 },
-    { field: 'number_of_reviews', headerName: '# of Reviews', width: 105 },
+    { field: 'review_count', headerName: '# of Reviews', width: 105 },
+    { field: 'address', headerName: 'Address', width: 300 },
     { field: 'city', headerName: 'City', width: 100 },
+    { field: 'state', headerName: 'State', width: 100 },
+    { field: 'stars', headerName: 'Rating', width: 100 }
   ]
 
   // This component makes uses of the Grid component from MUI (https://mui.com/material-ui/react-grid/).
@@ -89,8 +114,8 @@ export default function SongsPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {selectedAirbnbId && <SongCard airbnbId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />}
-      <h2>Find AirBnBs</h2>
+      {selectedYelpId && <SongCard airbnbId={selectedYelpId} handleClose={() => setSelectedYelpId(null)} />}
+      <h2>Find Yelp Businesse</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>
           <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
@@ -98,30 +123,18 @@ export default function SongsPage() {
         <Grid item xs={4}>
           <FormControlLabel
             value='is_open'
-            control={<Checkbox value={isOpen} onChange={(e) => setIsOpen(e.target.value)} />}
+            control={<Checkbox size='large' value={isOpen} onChange={(e) => setIsOpen(e.target.value)} />}
             label="Open Now"
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <p>Price ($USD per night)</p>
-          <Slider
-            value={price}
-            min={0}
-            max={2000}
-            step={10}
-            onChange={(e, newValue) => setPrice(newValue)}
-            valueLabelDisplay='auto'
-            valueLabelFormat={value => <div>{value}</div>}
           />
         </Grid>
         <Grid item xs={4}>
           <p>Number of Rooms</p>
           <Slider
-            value={numRatings}
+            value={minReviews}
             min={0}
             max={10}
             step={1}
-            onChange={(e, newValue) => setNumRatings(newValue)}
+            onChange={(e, newValue) => setMinReviews(newValue)}
             valueLabelDisplay='auto'
             valueLabelFormat={value => <div>{value}</div>}
           />
@@ -131,53 +144,53 @@ export default function SongsPage() {
         <Grid item xs={4}>
           <p>Stars (0-5)</p>
           <Slider
-            value={rating}
+            value={stars}
             min={0}
             max={5}
             step={0.1}
-            onChange={(e, newValue) => setRating(newValue)}
+            onChange={(e, newValue) => setStars(newValue)}
             valueLabelDisplay='auto'
           />
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={6} sx={{ mb: 5 }}>
           <p>Select state</p>
-          <Select value={state} onChange={(e) => setState(e.target.value)} style={{ width: "100%" }}>
+          {/* <Select value={state} onChange={(e) => setState(e.target.value)} style={{ width: "100%" }}>
             <MenuItem value=''>Any</MenuItem>
-            <MenuItem value='PA'>Pennsylvania</MenuItem>
-            <MenuItem value='FL'>Florida</MenuItem>
-            <MenuItem value='MO'>Missouri</MenuItem>
-            <MenuItem value='AZ'>Arizona</MenuItem>
-            <MenuItem value='LA'>Louisiana</MenuItem>
-            <MenuItem value='IN'>Indiana</MenuItem>
-            <MenuItem value='NV'>Nevada</MenuItem>
-            <MenuItem value='ID'>Idaho</MenuItem>
-            <MenuItem value='TN'>Tennessee</MenuItem>
-            <MenuItem value='AB'>Alberta</MenuItem>
-            <MenuItem value='IL'>Illinois</MenuItem>
-            <MenuItem value='CA'>California</MenuItem>
-            <MenuItem value='NJ'>New Jersey</MenuItem>
-            <MenuItem value='DE'>Delaware</MenuItem>
-            <MenuItem value='HI'>Hawaii</MenuItem>
-            <MenuItem value='CO'>Colorado</MenuItem>
-            <MenuItem value='MI'>Michigan</MenuItem>
-            <MenuItem value='NC'>North Carolina</MenuItem>
-            <MenuItem value='UT'>Utah</MenuItem>
-            <MenuItem value='VT'>Vermont</MenuItem>
-            <MenuItem value='MT'>Montana</MenuItem>
-            <MenuItem value='MA'>Massachusetts</MenuItem>
-            <MenuItem value='TX'>Texas</MenuItem>
-            <MenuItem value='WA'>Washington</MenuItem>
-            <MenuItem value='VI'>Virgin Islands</MenuItem>
-            <MenuItem value='SD'>South Dakota</MenuItem>
+            {states.map((state) => (
+              <MenuItem key={state.value} value={state.value}>
+                {state.label}
+              </MenuItem>
+            ))}
+          </Select> */}
+          <Autocomplete
+            defaultValue={states[0]}
+            onChange={(e, newValue) => setState(newValue)}
+            options={states}
+            getOptionLabel={(option) => option.label || ''}
+            isOptionEqualToValue={(option, value) => option.value === value.value}
 
-
-
-          </Select>
+            renderInput={(params) => (
+              <TextField
+                value={state}
+                {...params}
+                inputProps={{
+                  ...params.inputProps,
+                }}
+              />
+            )}
+            autoComplete={true}
+            autoHighlight
+          />
         </Grid>
         <Grid item xs={6}>
           <p>Select city</p>
           <Select value={city} onChange={(e) => setCity(e.target.value)} style={{ width: "100%" }}>
-            {(cities.length === 0) ? (cities.map((city) => <MenuItem value={city}>{city}</MenuItem>)) : (<MenuItem value=''>Any</MenuItem>)}
+            <MenuItem value=''>Any</MenuItem>
+            {cities.map((city) => (
+              <MenuItem key={city.city} value={city.city}>
+                {city.city}
+              </MenuItem>
+            ))}
           </Select>
         </Grid>
       </Grid>

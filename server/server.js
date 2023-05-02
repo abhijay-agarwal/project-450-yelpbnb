@@ -11,14 +11,19 @@ app.use(cors({
 // We use express to define our various API endpoints and
 // provide their handlers that we implemented in routes.js
 app.get('/author/:type', routes.author);
-app.get('/airbnb/:city/:minRatingCount/:roomType/:price_min/:price_max/:state', routes.airbnbFilter);
+app.get('/airbnb', routes.airbnbFilter);
 app.get('/airbnb/:airbnbid', routes.airbnb);
-app.get('/airbnb/ranking/:city/', routes.airbnbRanked);
-app.get('/yelp/:city/:is_open/:star/:review_count', routes.yelpFilter);
+app.get('/airbnb/ranking', routes.airbnbRanked);
+app.get('/neighbourhoods', routes.airbnbNeighbourhoods);
+app.get('/airbnb/location/:id', routes.airbnbLocation);
+app.get('/yelp/location/:id', routes.yelpLocation);
+app.get('/yelp', routes.yelpFilter);
 app.get('/yelp/:id', routes.yelpBusinesses);
 app.get('/yelp/:id/review', routes.yelpBusinessesReviews);
-app.get('/yelp/ranking/:city/', routes.yelpRanking);
+app.get('/yelp/ranking/:city', routes.yelpRanking);
 app.get('/yelp/:state', routes.yelpCities);
+app.get('/combined/location/:airbnbId/:yelpId', routes.combinedLocation);
+app.get('/cities', routes.getCities);
 // app.get('/yelp/users/:id', routes.yelpUsers);
 
 app.listen(config.server_port, () => {

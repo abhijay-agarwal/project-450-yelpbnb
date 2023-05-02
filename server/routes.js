@@ -40,15 +40,30 @@ const author = async function (req, res) {
  * AIRBNB QUERIES *
  ********************************/
 
-// Route 1: GET /airbnb/:city/:minRatingCount/:roomType/:price_min/:price_max/:availability
+// Route 1: GET /airbnb?city=&rating_count=&roomType=''&price_min=&price_max=&availability=&sort=
 const airbnbFilter = async function (req, res) {
   //all queries = def or 0 if defaulted
-  const cityName = req.query.city;
-  const minRatingCount = parseInt(req.query.ratingCount, 10) ?? 0;   //lower bound on the number of ratings
-  const roomType = req.query.room_type ?? '';
-  const price_min = parseInt(req.query.price_min, 10) ?? 0;
-  const price_max = parseInt(req.query.price_max, 10) ?? 100000;
-  const availability_min = parseInt(req.query.price_max, 10) ?? 0; //minimum night availability out of 365
+  // city name is req.query.city if its not '' (empty string), otherwise it's '%'
+  const cityName = req.query.city || '%';
+  const minRatingCount = parseInt(req.query.rating_count, 10) || 0;   //lower bound on the number of ratings
+  const stayLength = parseInt(req.query.stay_length, 10) || 1250; // stay length in days
+  const roomType = req.query.room_type || '%';
+  const price_min = parseInt(req.query.price_min, 10) || 0;
+  const price_max = parseInt(req.query.price_max, 10) || 100000;
+  const neighbourhood = req.query.neighbourhood || '%';
+  const availability_min = parseInt(req.query.availability_min, 10) || 0; //minimum night availability out of 365
+
+  //print all variables defined above along with a string description
+  console.log(`cityName: ${cityName}`);
+  console.log(`minRatingCount: ${minRatingCount}`);
+  console.log(`stayLength: ${stayLength}`);
+  console.log(`roomType: ${roomType}`);
+  console.log(`price_min: ${price_min}`);
+  console.log(`price_max: ${price_max}`);
+  console.log(`availability_min: ${availability_min}`);
+  console.log(`neighborhood: ${neighbourhood}`)
+
+
 
   let sortOrder = "";
   if (req.query.sort === "1") {
@@ -61,13 +76,16 @@ const airbnbFilter = async function (req, res) {
 
   let airbnbquery1 =
     `
-  SELECT id, name, host_name, price, minimum_nights, number_of_reviews, availability_365, city
+  SELECT id, name, neighbourhood, host_name, price, minimum_nights, number_of_reviews, availability_365, city
   FROM airbnb a
-  WHERE a.city = '${cityName}'
+  WHERE a.city LIKE '${cityName}'
+  AND a.minimum_nights <= ${stayLength}
   AND a.number_of_reviews > ${minRatingCount}
-  AND a.room_type LIKE '%${roomType}%'
+  AND a.room_type LIKE '${roomType}'
   AND a.price BETWEEN ${price_min} AND ${price_max}
-  AND a.availability_365 >= ${availability_min}`;
+  AND a.availability_365 >= ${availability_min}
+  AND a.neighbourhood LIKE '${neighbourhood}'
+  `;
 
   if (sortOrder !== "") {
     airbnbquery1 += " ORDER BY a.price LIMIT 100" + sortOrder;
@@ -123,16 +141,56 @@ const airbnbRanked = async function (req, res) {
   });
 }
 
+// query to get all the neighbourhoods of a given city
+// Route 4: GET /airbnb/neighbourhoods&city=city
+const airbnbNeighbourhoods = async function (req, res) {
+  const city = req.query.city || '%';
+  connection.query(`
+    SELECT DISTINCT neighbourhood
+    FROM airbnb
+    WHERE city LIKE '${city}'
+    ORDER BY neighbourhood ASC;
+    `, (err, data) => {
+    if (err || data.length === 0) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data);
+    }
+  });
+}
+
+// query to get the latitude and logitude for any given airbnb ID
+// Route 5: GET /airbnb/location/:id
+const airbnbLocation = async function (req, res) {
+  const id = req.params.id;
+  connection.query(`
+    SELECT latitude, longitude
+    FROM airbnb
+    WHERE id = ${id}
+    LIMIT 1;
+    `, (err, data) => {
+    if (err || data.length === 0) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data[0]);
+    }
+  });
+}
+
 /********************************
  * YELP QUERIES *
  ********************************/
-//Route 4: GET yelp/:cityName/:open/:stars/:review_count
+//Route 4: GET /yelp?state=state&city=cityname&is_open=open&stars=stars&review_count=review_count&sort=sort
 const yelpFilter = async function (req, res) {
   //all queries = def or 0 if defaulted
-  const cityName = req.query.city;
+  const name = req.query.name || '%';
+  const state = req.query.state || '%';
+  const city = req.query.city || '%';
   const open = req.query.is_open === 'true' ? 1 : 0;   //1 is open, 0 is both
-  const stars = parseInt(req.query.stars, 10) ?? 0;; // minimum stars
-  const review_count = parseInt(req.query.review_count, 10) ?? 0; // minimum review_count
+  const stars = parseInt(req.query.stars, 10) || 0;; // minimum stars
+  const minReviews = parseInt(req.query.review_count, 10) || 0; // minimum review_count
 
   let sortOrder = "";
   if (req.query.sort === "1") {
@@ -145,14 +203,16 @@ const yelpFilter = async function (req, res) {
 
   let yelpquery =
     `
-  SELECT b.business_id, b.name, b.address, b.city, b.stars, b.review_count
+  SELECT b.business_id, b.name, b.address, b.state, b.city, b.stars, b.review_count
   FROM (
     SELECT * 
-    FROM businesses 
-    WHERE b.city = '${cityName}'
-    AND b.review_count >= ${review_count}
-    AND b.stars >= ${stars}
-    AND b.is_open = ${open}
+    FROM yelp.businesses
+    WHERE state LIKE '${state}'
+    AND name LIKE '%${name}%'
+    AND city LIKE '${city}'
+    AND review_count >= ${minReviews}
+    AND stars >= ${stars}
+    AND is_open >= ${open}
    ) b 
    `;
 
@@ -233,6 +293,26 @@ WHERE state = 'PA';
 
 }
 
+// get the latitude and logitude for any given yelp ID
+// Route 5: GET /yelp/location/:id
+const yelpLocation = async function (req, res) {
+  const id = req.params.id;
+  connection.query(`
+    SELECT latitude, longitude
+    FROM yelp.businesses
+    WHERE business_id = '${id}'
+    LIMIT 1;
+    `, (err, data) => {
+    if (err || data.length === 0) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data[0]);
+    }
+  });
+}
+
+
 /************************
  * COMPLEX QUERIES*
  ************************/
@@ -304,9 +384,9 @@ LIMIT 50;
 const yelpToAirbnb = async function (req, res) {
   const id = req.params.id;
   const name = req.query.name;
-  const roomType = req.query.room_type ?? '';
-  const price_min = parseInt(req.query.price_min, 10) ?? 0;
-  const price_max = parseInt(req.query.price_max, 10) ?? 100000;
+  const roomType = req.query.room_type || '';
+  const price_min = parseInt(req.query.price_min, 10) || 0;
+  const price_max = parseInt(req.query.price_max, 10) || 100000;
 
   connection.query(`
   SELECT a.name AS airbnb_name, b.name AS business_name, a.city,
@@ -327,6 +407,29 @@ LIMIT 50;
     }
   });
 }
+
+// query that given two businesses will return both their longitudes and latitudes
+// Route 11: GET /combined/location/:airbnbId/:yelpId
+const combinedLocation = async function (req, res) {
+  const airbnbId = req.params.airbnbId;
+  const yelpId = req.params.yelpId;
+  connection.query(`
+    SELECT a.latitude AS airbnbLat, a.longitude AS airbnbLong, b.latitude AS yelpLat, b.longitude AS yelpLong
+    FROM airbnb a JOIN yelp.businesses b ON a.city = b.city
+    WHERE a.id = ${airbnbId} AND b.business_id = '${yelpId}'
+    LIMIT 1;
+    `, (err, data) => {
+    if (err || data.length === 0) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data);
+    }
+  });
+}
+
+
+
 
 // Route 10: GET /combined/stateranking
 // For each state, return the list of states ranked by decreasing number of businesses with more than 4 stars, and secondarily number of airbnb in the state.
@@ -362,6 +465,23 @@ const stateRanking = async function (req, res) {
   });
 }
 
+const getCities = async function (req, res) {
+  const state = req.query.state;
+  connection.query(`
+    SELECT DISTINCT city
+    FROM yelp.businesses
+    WHERE state LIKE '${state}';
+    `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data);
+    }
+  });
+}
+
+
 
 module.exports = {
   author,
@@ -375,5 +495,10 @@ module.exports = {
   airbnbToYelp,
   yelpToAirbnb,
   stateRanking,
-  yelpCities
+  yelpCities,
+  yelpLocation,
+  airbnbLocation,
+  airbnbNeighbourhoods,
+  combinedLocation,
+  getCities
 }
