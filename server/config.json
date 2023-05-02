@@ -1,9 +1,9 @@
 {
-  "rds_host": "database-1.cuuadeqaxwxs.us-east-1.rds.amazonaws.com",
+  "rds_host": "database-1.cvohg9veopkh.us-east-1.rds.amazonaws.com",
   "rds_port": "3306",
   "rds_user": "yelpbnb",
   "rds_password" : "yelpBnB!",
-  "rds_db": "database-1",
+  "rds_db": "yelp",
   "server_host": "localhost",
   "server_port":"8080"
 }

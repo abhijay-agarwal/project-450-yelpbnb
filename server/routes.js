@@ -359,5 +359,4 @@ module.exports = {
   yelpBusinessesReviews, 
   yelpRanking, 
   yelpUsers, 
-
 }
