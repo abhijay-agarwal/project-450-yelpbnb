@@ -11,14 +11,15 @@ app.use(cors({
 // We use express to define our various API endpoints and
 // provide their handlers that we implemented in routes.js
 app.get('/author/:type', routes.author);
-app.get('/random', routes.random);
-app.get('/song/:song_id', routes.song);
-app.get('/album/:album_id', routes.album);
-app.get('/albums', routes.albums);
-app.get('/album_songs/:album_id', routes.album_songs);
-app.get('/top_songs', routes.top_songs);
-app.get('/top_albums', routes.top_albums);
-app.get('/search_songs', routes.search_songs);
+app.get('/airbnb/:city/:minRatingCount/:roomType/:price_min/:price_max/:state', routes.airbnbFilter);
+app.get('/airbnb/:airbnbid', routes.airbnb);
+app.get('/airbnb/ranking/:city/', routes.airbnbRanked);
+app.get('/yelp/:city/:is_open/:star/:review_count', routes.yelpFilter);
+app.get('/yelp/:id', routes.yelpBusinesses);
+app.get('/yelp/:id/review', routes.yelpBusinessesReviews);
+app.get('/yelp/ranking/:city/', routes.yelpRanking);
+app.get('/yelp/:state', routes.yelpCities);
+// app.get('/yelp/users/:id', routes.yelpUsers);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
