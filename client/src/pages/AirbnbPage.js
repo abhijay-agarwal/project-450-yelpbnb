@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Checkbox, Container, FormLabel, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel } from '@mui/material';
+import { Button, MenuItem, Container, FormLabel, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel, RadioGroup, Select } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import SongCard from '../components/SongCard';
@@ -9,7 +9,7 @@ const config = require('../config.json');
 export default function SongsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [data, setData] = useState([]);
-  const [selectedSongId, setSelectedSongId] = useState(null);
+  const [selectedAirbnbId, setSelectedAirbnbId] = useState(null);
 
   // choose if you're searching for AirBnB's or Yelp restaurants
   const [searchType, setSearchType] = useState('airbnb');
@@ -48,7 +48,7 @@ export default function SongsPage() {
       .then(resJson => {
         // DataGrid expects an array of objects with a unique id.
         // To accomplish this, we use a map with spread syntax (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
-        const songsWithId = resJson.map((song) => ({ id: song.song_id, ...song }));
+        const songsWithId = resJson.map((airbnb) => ({ id: airbnb.id, ...airbnb }));
         setData(songsWithId);
       });
   }
@@ -60,7 +60,7 @@ export default function SongsPage() {
   const columns = [
     {
       field: 'title', headerName: 'Title', width: 300, renderCell: (params) => (
-        <Link onClick={() => setSelectedSongId(params.row.song_id)}>{params.value}</Link>
+        <Link onClick={() => setSelectedAirbnbId(params.row.song_id)}>{params.value}</Link>
       )
     },
     { field: 'duration', headerName: 'Duration' },
@@ -82,8 +82,8 @@ export default function SongsPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {selectedSongId && <SongCard songId={selectedSongId} handleClose={() => setSelectedSongId(null)} />}
-      <h2>Search AirBnBs and Yelp Businesses</h2>
+      {selectedAirbnbId && <SongCard songId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />}
+      <h2>Find AirBnBs</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>
           <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
@@ -91,15 +91,29 @@ export default function SongsPage() {
         <Grid item xs={4}>
           <FormControl>
             <FormLabel id="demo-radio-buttons-group-label">What are you searching for?</FormLabel>
-            <FormControlLabel
-              value='AirBnB'
-              control={<Radio />}
-              label="AirBnB"
-            />
-            <FormControlLabel value="Yelp" control={<Radio />} label="Yelp" />
+            <RadioGroup
+              aria-labelledby="demo-controlled-radio-buttons-group"
+              name="controlled-radio-buttons-group"
+              value={searchType}
+              onChange={(e) => {
+                setSearchType(e.target.value);
+                console.log(searchType);
+              }}
+            >
+              <FormControlLabel
+                value='airbnb'
+                control={<Radio />}
+                label="AirBnB"
+              />
+              <FormControlLabel
+                value="yelp"
+                control={<Radio />}
+                label="Yelp"
+              />
+            </RadioGroup>
           </FormControl>
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={4}>
           <p>Price ($USD per night)</p>
           <Slider
             value={price}
@@ -111,7 +125,7 @@ export default function SongsPage() {
             valueLabelFormat={value => <div>{value}</div>}
           />
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={4}>
           <p>Number of Rooms</p>
           <Slider
             value={numRooms}
@@ -125,7 +139,7 @@ export default function SongsPage() {
         </Grid>
         {/* TODO (TASK 24): add sliders for danceability, energy, and valence (they should be all in the same row of the Grid) */}
         {/* Hint: consider what value xs should be to make them fit on the same row. Set max, min, and a reasonable step. Is valueLabelFormat is necessary? */}
-        <Grid item xs={6}>
+        <Grid item xs={4}>
           <p>Rating (0-5)</p>
           <Slider
             value={rating}
@@ -135,6 +149,48 @@ export default function SongsPage() {
             onChange={(e, newValue) => setRating(newValue)}
             valueLabelDisplay='auto'
           />
+        </Grid>
+        <Grid item xs={6}>
+          <p>Select city</p>
+          <Select value={city} onChange={(e) => setCity(e.target.value)} style={{ width: "100%" }}>
+            <MenuItem value="Los Angeles">Los Angeles</MenuItem>
+            <MenuItem value="Denver">Denver</MenuItem>
+            <MenuItem value="San Francisco">San Francisco</MenuItem>
+            <MenuItem value="Austin">Austin</MenuItem>
+            <MenuItem value="Seattle">Seattle</MenuItem>
+            <MenuItem value="Chicago">Chicago</MenuItem>
+            <MenuItem value="Twin Cities MSA">Twin Cities MSA</MenuItem>
+            <MenuItem value="New York City">New York City</MenuItem>
+            <MenuItem value="Oakland">Oakland</MenuItem>
+            <MenuItem value="Clark County">Clark County</MenuItem>
+            <MenuItem value="Washington D.C.">Washington D.C.</MenuItem>
+            <MenuItem value="Boston">Boston</MenuItem>
+            <MenuItem value="San Clara Country">San Clara Country</MenuItem>
+            <MenuItem value="Hawaii">Hawaii</MenuItem>
+            <MenuItem value="San Diego">San Diego</MenuItem>
+            <MenuItem value="Nashville">Nashville</MenuItem>
+            <MenuItem value="Jersey City">Jersey City</MenuItem>
+            <MenuItem value="Cambridge">Cambridge</MenuItem>
+            <MenuItem value="Rhode Island">Rhode Island</MenuItem>
+            <MenuItem value="New Orleans">New Orleans</MenuItem>
+            <MenuItem value="Santa Cruz County">Santa Cruz County</MenuItem>
+            <MenuItem value="San Mateo County">San Mateo County</MenuItem>
+            <MenuItem value="Portland">Portland</MenuItem>
+            <MenuItem value="Pacific Grove">Pacific Grove</MenuItem>
+            <MenuItem value="Asheville">Asheville</MenuItem>
+            <MenuItem value="Broward County">Broward County</MenuItem>
+            <MenuItem value="Columbus">Columbus</MenuItem>
+            <MenuItem value="Salem">Salem</MenuItem>
+          </Select>
+        </Grid>
+        <Grid item xs={6}>
+          <p>Select room type</p>
+          <Select value={type} onChange={(e) => setType(e.target.value)} style={{ width: "100%" }}>
+            <MenuItem value="Entire home/apt">Entire Home/Apartment</MenuItem>
+            <MenuItem value="Private room">Private Room</MenuItem>
+            <MenuItem value="Shared room">Shared Room</MenuItem>
+            <MenuItem value="Hotel room">Hotel Room</MenuItem>
+          </Select>
         </Grid>
       </Grid>
       <Button onClick={() => search()} style={{ left: '50%', transform: 'translateX(-50%)' }}>
