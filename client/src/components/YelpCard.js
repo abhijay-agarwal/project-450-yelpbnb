@@ -59,24 +59,6 @@ export default function YelpCard({ yelpId, handleClose }) {
     },
   ];
 
-  // Hint: here is some pseudocode to guide you
-  // fetch(song data, id determined by songId prop)
-  //   .then(res => res.json())
-  //   .then(resJson => {
-  //     set state variable with song data
-  //     fetch(album data, id determined by result in resJson)
-  //       .then(res => res.json())
-  //       .then(resJson => set state variable with album data)
-  //     })
-
-  // const yelpInfo = [
-  //     { name: 'Name', value: yelpData.name },
-  //     { name: 'Address', value: yelpData.address },
-  //     { name: 'City', value: yelpData.city },
-  //     { name: 'State', value: yelpData.state },
-  //     { name: 'Stars', value: yelpData.stars },
-  //     { name: 'Review Count', value: yelpData.review_count },
-  //     { name: 'Open', value: yelpData.is_open === 1 ? 'Yes' : 'No' },
   // ];
 
   return (
@@ -90,11 +72,6 @@ export default function YelpCard({ yelpId, handleClose }) {
         style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
       >
         <h1>{yelpData.name}</h1>
-        {/* <h2>Recommended Airbnb:&nbsp;
-          <NavLink to={`/albums/${airbnbData[0].airbnbId}`}>{airbnbData[0].airbnbName}</NavLink>
-          <NavLink to={`/albums/${airbnbData[1].airbnbId}`}>{airbnbData[1].airbnbName}</NavLink>
-          <NavLink to={`/albums/${airbnbData[2].airbnbId}`}>{airbnbData[2].airbnbName}</NavLink>
-        </h2> */}
         <p>Name: {yelpData.name}</p>
         <p>Address: {yelpData.address}</p>
         <p>City: {yelpData.city}</p>

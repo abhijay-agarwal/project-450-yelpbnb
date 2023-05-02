@@ -32,7 +32,7 @@ export default function App() {
           {/* <Route path="/map" element={<MapPage />} /> */}
           <Route path="/" element={<JointPage />} />
           <Route path="/yelp" element={<YelpPage />} />
-          <Route path="/albums/:album_id" element={<AirbnbInfoPage />} />
+          <Route path="/airbnb/:airbnbId" element={<AirbnbInfoPage />} />
           <Route path="/airbnb" element={<AirbnbPage />} />
         </Routes>
       </BrowserRouter>

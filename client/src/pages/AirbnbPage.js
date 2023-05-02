@@ -5,7 +5,6 @@ import {
   Container,
   FormLabel,
   Grid,
-  Link,
   Slider,
   TextField,
   Radio,
@@ -19,6 +18,8 @@ import { DataGrid } from '@mui/x-data-grid';
 
 import SongCard from '../components/AirbnbCard';
 import { getDistance } from '../helpers/formatter';
+// import AirbnbInfoPage from './AirbnbInfoPage';
+import { useNavigate, NavLink } from 'react-router-dom';
 const config = require('../config.json');
 
 export default function AirbnbPage() {
@@ -124,12 +125,11 @@ export default function AirbnbPage() {
   // instead of loading only the data we need (which is necessary in order to be able to sort by column)
   const columns = [
     {
-      field: 'title', headerName: 'Name', width: 450, renderCell: (params) => (
-        <Link onClick={() => setSelectedAirbnbId(params.row.id)}>{params.row.name}</Link>
+      field: 'title', headerName: 'Name', width: 550, renderCell: (params) => (
+        <NavLink to={`/airbnb/${params.row.id}`}>{params.row.name}</NavLink>
       )
     },
     { field: 'host_name', headerName: 'Host Name', width: 110 },
-    { field: 'neighbourhood', headerName: 'Neighborhood', width: 130 },
     { field: 'price', headerName: 'Price', width: 100 },
     { field: 'minimum_nights', headerName: 'Min Nights', width: 105 },
     { field: 'number_of_reviews', headerName: 'Reviews', width: 80 },
@@ -145,7 +145,6 @@ export default function AirbnbPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {/* {selectedAirbnbId && <AirbnbCard airbnbId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />} */}
       <h2>Find Your Perfect AirBnB</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>

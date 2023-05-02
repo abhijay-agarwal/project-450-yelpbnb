@@ -11,16 +11,18 @@ import {
   Radio,
   FormControl,
   FormControlLabel,
+  Checkbox,
   RadioGroup,
   Select,
 } from "@mui/material";
+import { NavLink } from "react-router-dom";
 import { DataGrid } from "@mui/x-data-grid";
 
 // import SongCard from '../components/SongCard';
 // import { getDistance } from '../helpers/formatter';
 const config = require("../config.json");
 
-export default function SongsPage() {
+export default function JointPage() {
   const [pageSize, setPageSize] = useState(10);
   const [data, setData] = useState([]);
   const [selectedAirbnbId, setSelectedAirbnbId] = useState(null);
@@ -38,12 +40,9 @@ export default function SongsPage() {
 
   // yelp variables
 
-  const [minRating, setMinRating] = useState(0);
-
   // const [state, setState] = useState('');
   const [city, setCity] = useState("");
   const [radius, setRadius] = useState(0);
-  const [cities, setCities] = useState([]);
 
   const [stars, setStars] = useState(0);
 
@@ -85,11 +84,12 @@ export default function SongsPage() {
 
   const searchAirbnb = () => {
     fetch(
-      `http://${config.server_host}:${config.server_port}/airbnb?` +
-      `city=${city}` +
-      `&stay_length=${length}` +
+      `http://${config.server_host}:${config.server_port}/combined/yelp?name=${name}` +
+      `&length=${length}` +
+      `&radius=${radius}` +
+      `&stars = ${stars}` +
       `&price_min=${price[0]}&price_max=${price[1]}` +
-      `&rating_count=${minAirbnbReviews}` +
+      `&review_count=${minAirbnbReviews}` +
       `&room_type=${type}`
     )
       .then((res) => res.json())
@@ -106,11 +106,11 @@ export default function SongsPage() {
 
   const searchYelp = () => {
     fetch(
-      `http://${config.server_host}:${config.server_port}/yelp?name=${name}` +
+      `http://${config.server_host}:${config.server_port}/combined/airbnb?name=${name}` +
       `&city=${city}` +
-      `&minReviews=${minYelpReviews}` +
+      `&review_count=${minYelpReviews}` +
       `&stars=${stars}` +
-      `&isOpen=${isOpen}`
+      `&is_open=${isOpen}`
     )
       .then((res) => res.json())
       .then((resJson) => {
@@ -123,6 +123,10 @@ export default function SongsPage() {
         setData(yelpData);
       });
   };
+
+  // useEffect(() => {
+  //   searchType === "airbnb" ? searchYelp() : searchAirbnb();
+  // }, [searchType]);
 
   // get data when search is pressed
   const search = () => {
@@ -196,21 +200,15 @@ export default function SongsPage() {
     searchType === "airbnb"
       ? [
         {
-          field: "title",
-          headerName: "Name",
-          width: 450,
-          renderCell: (params) => (
-            <Link onClick={() => setSelectedAirbnbId(params.row.id)}>
-              {params.row.name}
-            </Link>
-          ),
+          field: 'title', headerName: 'Name', width: 500, renderCell: (params) => (
+            <NavLink to={`/airbnb/${params.row.id}`}>{params.row.name}</NavLink>
+          )
         },
-        { field: "host_name", headerName: "Host Name", width: 110 },
-        { field: "neighbourhood", headerName: "Neighborhood", width: 130 },
-        { field: "price", headerName: "Price", width: 100 },
-        { field: "minimum_nights", headerName: "Min Nights", width: 105 },
-        { field: "number_of_reviews", headerName: "Reviews", width: 80 },
-        { field: "city", headerName: "City", width: 100 },
+        { field: "host_name", headerName: "Host Name", width: 120 },
+        { field: "price", headerName: "Price", width: 110 },
+        { field: "minimum_nights", headerName: "Min Nights", width: 115 },
+        { field: "number_of_reviews", headerName: "Reviews", width: 90 },
+        { field: "city", headerName: "City", width: 110 },
       ]
       : [
         {
@@ -297,11 +295,15 @@ export default function SongsPage() {
                 control={<Radio />}
                 label="AirBnB"
               />
-              <FormControlLabel value="yelp" control={<Radio />} label="Yelp" />
+              <FormControlLabel
+                value="yelp"
+                control={<Radio />}
+                label="Yelp" />
             </RadioGroup>
           </FormControl>
         </Grid>
-        <Grid item xs={4}>
+        <h2>AirBnB Filters</h2>
+        <Grid item xs={2}>
           <p>Price ($USD per night)</p>
           <Slider
             value={price}
@@ -313,7 +315,7 @@ export default function SongsPage() {
             valueLabelFormat={(value) => <div>{value}</div>}
           />
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={2}>
           <p>Duration of Stay</p>
           <Slider
             value={length}
@@ -327,7 +329,7 @@ export default function SongsPage() {
         </Grid>
         {/* TODO (TASK 24): add sliders for danceability, energy, and valence (they should be all in the same row of the Grid) */}
         {/* Hint: consider what value xs should be to make them fit on the same row. Set max, min, and a reasonable step. Is valueLabelFormat is necessary? */}
-        <Grid item xs={4}>
+        <Grid item xs={3}>
           <p>Number of reviews</p>
           <Slider
             value={
@@ -340,18 +342,43 @@ export default function SongsPage() {
             valueLabelDisplay="auto"
           />
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={2}>
+          <p>Select room type</p>
+          <Select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            style={{ width: "100%" }}
+          >
+            <MenuItem value="Entire home/apt">Entire Home/Apartment</MenuItem>
+            <MenuItem value="Private room">Private Room</MenuItem>
+            <MenuItem value="Shared room">Shared Room</MenuItem>
+            <MenuItem value="Hotel room">Hotel Room</MenuItem>
+          </Select>
+        </Grid>
+        <Grid item xs={3}>
+          <h2> Yelp Filters </h2>
+        </Grid>
+        <Grid item xs={3}>
           <p>Minimum rating</p>
           <Slider
             value={stars}
             min={0}
-            max={966}
-            step={10}
+            max={5}
+            step={0.1}
             onChange={(e) => setStars(e.target.value)}
             valueLabelDisplay="auto"
           />
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={2} >
+          <FormControlLabel
+            value={isOpen}
+            control={<Checkbox size='large' onChange={(e) => {
+              setIsOpen(e.target.checked);
+            }} />}
+            label="Open?"
+          />
+        </Grid>
+        <Grid item xs={3}>
           <p>How close by are you looking for?</p>
           <Slider
             value={radius}
@@ -379,20 +406,7 @@ export default function SongsPage() {
               </MenuItem>
             ))}
           </Select>
-        </Grid> */}
-        <Grid item xs={4}>
-          <p>Select room type</p>
-          <Select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            style={{ width: "100%" }}
-          >
-            <MenuItem value="Entire home/apt">Entire Home/Apartment</MenuItem>
-            <MenuItem value="Private room">Private Room</MenuItem>
-            <MenuItem value="Shared room">Shared Room</MenuItem>
-            <MenuItem value="Hotel room">Hotel Room</MenuItem>
-          </Select>
-        </Grid>
+            </Grid> */}
         {/* <Grid item xs={4}>
           <p>Select neighbourhood</p>
           <Select
@@ -413,6 +427,7 @@ export default function SongsPage() {
         </Grid> */}
       </Grid>
       <Button
+        variant="contained"
         onClick={() => search()}
         style={{ left: "50%", transform: "translateX(-50%)" }}
       >

@@ -8,7 +8,7 @@ import YelpCard from '../components/YelpCard';
 
 const config = require('../config.json');
 
-export default function SongsPage() {
+export default function YelpPage() {
   const [pageSize, setPageSize] = useState(10);
   const [data, setData] = useState([]);
   const [selectedYelpId, setSelectedYelpId] = useState(null);

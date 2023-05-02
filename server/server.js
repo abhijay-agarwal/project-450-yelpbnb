@@ -12,7 +12,7 @@ app.use(cors({
 // provide their handlers that we implemented in routes.js
 app.get('/author/:type', routes.author);
 app.get('/airbnb', routes.airbnbFilter);
-app.get('/airbnb/:airbnbid', routes.airbnb);
+app.get('/airbnb/:airbnbId', routes.airbnb);
 app.get('/airbnb/ranking', routes.airbnbRanked);
 app.get('/neighbourhoods', routes.airbnbNeighbourhoods);
 app.get('/airbnb/location/:id', routes.airbnbLocation);
@@ -24,8 +24,8 @@ app.get('/yelp/ranking/:city', routes.yelpRanking);
 app.get('/yelp/:state', routes.yelpCities);
 // app.get('/yelp/distance/:business_id', routes.topAirbnbCloseToYelp)
 app.get('/combined/location/:airbnbId/:yelpId', routes.combinedLocation);
-app.get('/combined/airbnb/:airbnbId', routes.airbnbToYelp);
-app.get('/combined/yelp/:yelpId', routes.yelpToAirbnb);
+app.get('/combined/airbnb', routes.airbnbToYelp);
+app.get('/combined/yelp', routes.yelpToAirbnb);
 app.get('/cities', routes.getCities);
 app.get('/combined/:id', routes.airbnbWithinRadius);
 app.get('/distance/:airbnbId/:yelpId', routes.getDistance);
