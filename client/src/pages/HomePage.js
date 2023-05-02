@@ -3,7 +3,7 @@ import { Container, Divider, Link } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 
 import LazyTable from '../components/LazyTable';
-import SongCard from '../components/SongCard';
+// import SongCard from '../components/SongCard';
 const config = require('../config.json');
 
 export default function HomePage() {
@@ -29,8 +29,8 @@ export default function HomePage() {
 
     // TODO (TASK 14): add a fetch call to get the app author (name not pennkey) and store it in the state variable
     fetch(`http://${config.server_host}:${config.server_port}/author/name`)
-    .then(res => res.text())
-    .then(resText => setAppAuthor(resText));
+      .then(res => res.text())
+      .then(resText => setAppAuthor(resText));
   }, []);
 
   // Here, we define the columns of the "Top Songs" table. The songColumns variable is an array (in order)
@@ -71,7 +71,7 @@ export default function HomePage() {
   return (
     <Container>
       {/* SongCard is a custom component that we made. selectedSongId && <SongCard .../> makes use of short-circuit logic to only render the SongCard if a non-null song is selected */}
-      {selectedSongId && <SongCard songId={selectedSongId} handleClose={() => setSelectedSongId(null)} />}
+      {/* {selectedSongId && <SongCard songId={selectedSongId} handleClose={() => setSelectedSongId(null)} />} */}
       <h2>Check out your song of the day:&nbsp;
         <Link onClick={() => setSelectedSongId(songOfTheDay.song_id)}>{songOfTheDay.title}</Link>
       </h2>

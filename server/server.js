@@ -23,7 +23,9 @@ app.get('/yelp/:id/review', routes.yelpBusinessesReviews);
 app.get('/yelp/ranking/:city', routes.yelpRanking);
 app.get('/yelp/:state', routes.yelpCities);
 app.get('/combined/location/:airbnbId/:yelpId', routes.combinedLocation);
+app.get('/combined/:airbnbId', routes.airbnbToYelp);
 app.get('/cities', routes.getCities);
+app.get('/distance/:airbnbId/:yelpId', routes.getDistance);
 // app.get('/yelp/users/:id', routes.yelpUsers);
 
 app.listen(config.server_port, () => {

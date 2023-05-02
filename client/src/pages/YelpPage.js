@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, MenuItem, Container, Autocomplete, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel, RadioGroup, Select, Checkbox } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-import SongCard from '../components/SongCard';
+import SongCard from '../components/AirbnbCard';
 import { formatDuration } from '../helpers/formatter';
 const config = require('../config.json');
 
@@ -73,7 +73,8 @@ export default function SongsPage() {
 
 
   const search = () => {
-    fetch(`http://${config.server_host}:${config.server_port}/yelp?state=${state}` +
+    fetch(`http://${config.server_host}:${config.server_port}/yelp?name=${name}` +
+      `&state=${state}` +
       `&city=${city}` +
       `&minReviews=${minReviews}` +
       `&stars=${stars}` +
@@ -102,7 +103,11 @@ export default function SongsPage() {
     { field: 'address', headerName: 'Address', width: 300 },
     { field: 'city', headerName: 'City', width: 100 },
     { field: 'state', headerName: 'State', width: 100 },
-    { field: 'stars', headerName: 'Rating', width: 100 }
+    { field: 'stars', headerName: 'Rating', width: 100 },
+    {
+      field: 'is_open', headerName: 'Open?', width: 100, renderCell: (params) => (
+        <div>{params.row.is_open ? 'Yes' : 'No'}</div>)
+    },
   ]
 
   // This component makes uses of the Grid component from MUI (https://mui.com/material-ui/react-grid/).
@@ -118,13 +123,13 @@ export default function SongsPage() {
       <h2>Find Yelp Businesse</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>
-          <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
+          <TextField label='Business Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
         </Grid>
         <Grid item xs={4}>
           <FormControlLabel
             value='is_open'
             control={<Checkbox size='large' value={isOpen} onChange={(e) => setIsOpen(e.target.value)} />}
-            label="Open Now"
+            label="Open?"
           />
         </Grid>
         <Grid item xs={4}>
@@ -154,15 +159,14 @@ export default function SongsPage() {
         </Grid>
         <Grid item xs={6} sx={{ mb: 5 }}>
           <p>Select state</p>
-          {/* <Select value={state} onChange={(e) => setState(e.target.value)} style={{ width: "100%" }}>
-            <MenuItem value=''>Any</MenuItem>
+          <Select value={state} onChange={(e) => setState(e.target.value)} style={{ width: "100%" }}>
             {states.map((state) => (
               <MenuItem key={state.value} value={state.value}>
                 {state.label}
               </MenuItem>
             ))}
-          </Select> */}
-          <Autocomplete
+          </Select>
+          {/* <Autocomplete
             defaultValue={states[0]}
             onChange={(e, newValue) => setState(newValue)}
             options={states}
@@ -180,7 +184,7 @@ export default function SongsPage() {
             )}
             autoComplete={true}
             autoHighlight
-          />
+          /> */}
         </Grid>
         <Grid item xs={6}>
           <p>Select city</p>

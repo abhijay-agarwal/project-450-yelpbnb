@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, MenuItem, Container, FormLabel, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel, RadioGroup, Select } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-import SongCard from '../components/SongCard';
+// import SongCard from '../components/SongCard';
 import { getDistance } from '../helpers/formatter';
 const config = require('../config.json');
 
@@ -10,6 +10,7 @@ export default function SongsPage() {
     const [pageSize, setPageSize] = useState(10);
     const [data, setData] = useState([]);
     const [selectedAirbnbId, setSelectedAirbnbId] = useState(null);
+    const [selectedYelpId, setSelectedYelpId] = useState(null);
 
     // choose if you're searching for AirBnBs or Yelp restaurants
     const [searchType, setSearchType] = useState('airbnb');
@@ -111,7 +112,9 @@ export default function SongsPage() {
     // The format of the columns array and the DataGrid component itself is very similar to our
     // LazyTable component. The big difference is we provide all data to the DataGrid component
     // instead of loading only the data we need (which is necessary in order to be able to sort by column)
-    const columns = [
+
+    // if the searchtype is for airbnb's then use the airbnb columns, otherwise use the yelp columns
+    const columns = searchType === 'airbnb' ? [
         {
             field: 'title', headerName: 'Name', width: 450, renderCell: (params) => (
                 <Link onClick={() => setSelectedAirbnbId(params.row.id)}>{params.row.name}</Link>
@@ -124,6 +127,25 @@ export default function SongsPage() {
         { field: 'number_of_reviews', headerName: 'Reviews', width: 80 },
         { field: 'city', headerName: 'City', width: 100 },
     ]
+        :
+        [
+            {
+                field: 'title', headerName: 'Name', width: 300, renderCell: (params) => (
+                    <Link onClick={() => setSelectedYelpId(params.row.id)}>{params.row.name}</Link>
+                )
+            },
+            { field: 'review_count', headerName: '# of Reviews', width: 105 },
+            { field: 'address', headerName: 'Address', width: 300 },
+            { field: 'city', headerName: 'City', width: 100 },
+            { field: 'state', headerName: 'State', width: 100 },
+            { field: 'stars', headerName: 'Rating', width: 100 },
+            {
+                field: 'is_open', headerName: 'Open?', width: 100, renderCell: (params) => (
+                    <div>{params.row.is_open ? 'Yes' : 'No'}</div>)
+            },
+        ]
+
+
 
     // This component makes uses of the Grid component from MUI (https://mui.com/material-ui/react-grid/).
     // The Grid component is super simple way to create a page layout. Simply make a <Grid container> tag
@@ -134,7 +156,8 @@ export default function SongsPage() {
     // will automatically lay out all the grid items into rows based on their xs values.
     return (
         <Container>
-            {selectedAirbnbId && <SongCard airbnbId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />}
+            {selectedAirbnbId && <AirbnbCard airbnbId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />}
+            {selectedYelpId && <YelpCard airbnbId={selectedYelpId} handleClose={() => setSelectedYelpId(null)} />}
             <h2>Find AirBnBs</h2>
             <Grid container spacing={6}>
                 <Grid item xs={8}>

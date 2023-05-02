@@ -203,7 +203,7 @@ const yelpFilter = async function (req, res) {
 
   let yelpquery =
     `
-  SELECT b.business_id, b.name, b.address, b.state, b.city, b.stars, b.review_count
+  SELECT b.business_id, b.name, b.address, b.state, b.city, b.stars, b.review_count, b.is_open
   FROM (
     SELECT * 
     FROM yelp.businesses
@@ -346,28 +346,27 @@ ORDER BY b.name;
 }
 
 
-// Route 8: GET /combined/:id/:name
+// Route 8: GET /combined/:id
 // Given the id of an airbnb, rank the surrounding businesses based on average stars and review count, and output the most useful review. 
 
 const airbnbToYelp = async function (req, res) {
   const id = req.params.id;
-  const name = req.query.name;
 
   connection.query(`
   SELECT b.name AS business_name, b.city,
   AVG(r.stars) AS avg_stars, COUNT(r.review_id) AS review_count, r.text AS review
-FROM (
-SELECT business_id, MAX(useful) AS max_useful
-FROM reviews
-GROUP BY business_id
-) top_reviews
-JOIN reviews r ON r.business_id = top_reviews.business_id AND r.useful = top_reviews.max_useful
-JOIN businesses b ON r.business_id = b.business_id
-JOIN airbnb a ON a.longitudeint = b.longitudeint AND a.latitudeint = b.latitudeint
-WHERE a.id = '${id}' OR a.name = '${name}'
-GROUP BY b.business_id
-ORDER BY avg_stars DESC, review_count DESC
-LIMIT 50;
+  FROM (
+  SELECT business_id, MAX(useful) AS max_useful
+  FROM reviews
+  GROUP BY business_id
+  ) top_reviews
+  JOIN reviews r ON r.business_id = top_reviews.business_id AND r.useful = top_reviews.max_useful
+  JOIN businesses b ON r.business_id = b.business_id
+  JOIN airbnb a ON a.city = b.city
+  WHERE a.id = '${id}'
+  GROUP BY b.business_id
+  ORDER BY avg_stars DESC, review_count DESC
+  LIMIT 50;
     `, (err, data) => {
     if (err || data.length === 0) {
       console.log(err);
@@ -481,6 +480,31 @@ const getCities = async function (req, res) {
   });
 }
 
+const getDistance = async function (req, res) {
+  const airbnbId = req.params.airbnbId;
+  const yelpId = req.params.yelpId;
+  connection.query(`
+    SELECT a.id, y.business_id, y.name, 2 * ASIN(
+      SQRT(
+        POWER(
+          SIN((y.latitude - a.latitude) * PI() / 180 / 2), 2
+        ) + COS(y.latitude * PI() / 180) * COS(a.latitude * PI() / 180) * POWER(
+          SIN((y.longitude - a.longitude) * PI() / 180 / 2), 2
+        )
+      )
+    ) AS distance
+    FROM airbnb AS a, yelp.businesses AS y
+    WHERE a.id = ${airbnbId} AND y.business_id = '${yelpId}'
+    `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data);
+    }
+  });
+}
+
 
 
 module.exports = {
@@ -500,5 +524,6 @@ module.exports = {
   airbnbLocation,
   airbnbNeighbourhoods,
   combinedLocation,
-  getCities
+  getCities,
+  getDistance
 }

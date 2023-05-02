@@ -20,7 +20,7 @@ export default function SongCard({ airbnbId, handleClose }) {
   // Hint: you need to both fill in the callback and the dependency array (what variable determines the information you need to fetch?)
   // Hint: since the second fetch depends on the information from the first, try nesting the second fetch within the then block of the first (pseudocode is provided)
   useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/song/${airbnbId}`)
+    fetch(`http://${config.server_host}:${config.server_port}/airbnb/${airbnbId}`)
       .then(res => res.json())
       .then(resJson => {
         setSongData(resJson);
@@ -70,36 +70,6 @@ export default function SongCard({ airbnbId, handleClose }) {
           <Button disabled={barRadar} onClick={handleGraphChange}>Bar</Button>
           <Button disabled={!barRadar} onClick={handleGraphChange}>Radar</Button>
         </ButtonGroup>
-        <div style={{ margin: 20 }}>
-          { // This ternary statement returns a BarChart if barRadar is true, and a RadarChart otherwise
-            barRadar
-              ? (
-                <ResponsiveContainer height={250}>
-                  <BarChart
-                    data={chartData}
-                    layout='vertical'
-                    margin={{ left: 40 }}
-                  >
-                    <XAxis type='number' domain={[0, 1]} />
-                    <YAxis type='category' dataKey='name' />
-                    <Bar dataKey='value' stroke='#8884d8' fill='#8884d8' />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <ResponsiveContainer height={250}>
-                  <RadarChart data={chartData} outerRadius={100}>
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="name" />
-                    <PolarRadiusAxis angle={30} domain={[0, 1]} />
-                    <Radar dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                  </RadarChart>
-                  {/* TODO (TASK 21): display the same data as the bar chart using a radar chart */}
-                  {/* Hint: refer to documentation at https://recharts.org/en-US/api/RadarChart */}
-                  {/* Hint: note you can omit the <Legend /> element and only need one Radar element, as compared to the sample in the docs */}
-                </ResponsiveContainer>
-              )
-          }
-        </div>
         <Button onClick={handleClose} style={{ left: '50%', transform: 'translateX(-50%)' }} >
           Close
         </Button>

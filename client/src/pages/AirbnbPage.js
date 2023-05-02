@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-import SongCard from '../components/SongCard';
+import SongCard from '../components/AirbnbCard';
 import { getDistance } from '../helpers/formatter';
 const config = require('../config.json');
 
