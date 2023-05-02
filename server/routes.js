@@ -196,7 +196,7 @@ const yelpBusinesses = async function(req, res) {
 
 // Route 6: GET /yelp/:city
 const yelpRanking = async function(req, res) {
-  // return the ranking of airbnbs in a city
+  // return the ranking of yelps in a city
   const city = req.query.city;
   connection.query(`
       SELECT business_id, (@rank := @rank + 1) AS ranking, name, stars, review_count
@@ -214,12 +214,32 @@ const yelpRanking = async function(req, res) {
   });
 }
 
+//Route A: GET /yelp/:state/
+//return cities given state from Yelp data
+const yelpCities = async function(req, res) {
+const state = req.query.state;
+connection.query(`
+SELECT DISTINCT city
+FROM businesses
+WHERE state = 'PA';
+`, (err, data) => {
+  if (err || data.length === 0) {
+    console.log(err);
+    res.json({});
+  } else {
+    res.json(data);
+  }
+});
+
+}
+
 /************************
- * COMPLEX QUERIES THAT JOIN TWO TABLES *
+ * COMPLEX QUERIES*
  ************************/
 
 //Route 7: GET /yelp/:id
-// Join tables businesses, users, and reviews to display most useful review along with name of user, business name, review, stars, useful, funny and cool rankings in a certain state
+// Join tables businesses, users, and reviews to display most useful review along with name of user, 
+// business name, review, stars, useful, funny and cool rankings in a certain state
 const yelpBusinessesReviews = async function(req, res) {
   const id = req.params.id;
 
@@ -351,5 +371,9 @@ module.exports = {
   yelpFilter,
   yelpBusinesses,
   yelpBusinessesReviews, 
-  yelpRanking, 
+  yelpRanking,
+  airbnbToYelp,
+  yelpToAirbnb,
+  stateRanking,
+  yelpCities
 }

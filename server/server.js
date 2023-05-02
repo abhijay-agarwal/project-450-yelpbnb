@@ -18,6 +18,7 @@ app.get('/yelp/:city/:is_open/:star/:review_count', routes.yelpFilter);
 app.get('/yelp/:id', routes.yelpBusinesses);
 app.get('/yelp/:id/review', routes.yelpBusinessesReviews);
 app.get('/yelp/ranking/:city/', routes.yelpRanking);
+app.get('/yelp/:state', routes.yelpCities);
 // app.get('/yelp/users/:id', routes.yelpUsers);
 
 app.listen(config.server_port, () => {
