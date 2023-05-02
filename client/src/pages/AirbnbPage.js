@@ -150,7 +150,9 @@ export default function SongsPage() {
         </Grid>
         <Grid item xs={6}>
           <p>Select city</p>
-          <Select value={city} onChange={(e) => setCity(e.target.value)} style={{ width: "100%" }}>
+          <Select value={city} onChange={(e) => {
+            setCity(e.target.value);
+          }} style={{ width: "100%" }}>
             <MenuItem value="Los Angeles">Los Angeles</MenuItem>
             <MenuItem value="Denver">Denver</MenuItem>
             <MenuItem value="San Francisco">San Francisco</MenuItem>

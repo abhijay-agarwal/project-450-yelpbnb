@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, MenuItem, Container, FormLabel, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel, RadioGroup, Select, Checkbox } from '@mui/material';
+import { Button, MenuItem, Container, InputLabel, Grid, Link, Slider, TextField, Radio, FormControl, FormControlLabel, RadioGroup, Select, Checkbox } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import SongCard from '../components/SongCard';
@@ -143,33 +143,35 @@ export default function SongsPage() {
           <p>Select state</p>
           <Select value={state} onChange={(e) => setState(e.target.value)} style={{ width: "100%" }}>
             <MenuItem value=''>Any</MenuItem>
-            <MenuItem value='PA'>PA</MenuItem>
-            <MenuItem value='FL'>FL</MenuItem>
-            <MenuItem value='MO'>MO</MenuItem>
-            <MenuItem value='AZ'>AZ</MenuItem>
-            <MenuItem value='LA'>LA</MenuItem>
-            <MenuItem value='IN'>IN</MenuItem>
-            <MenuItem value='NV'>NV</MenuItem>
-            <MenuItem value='ID'>ID</MenuItem>
-            <MenuItem value='TN'>TN</MenuItem>
-            <MenuItem value='AB'>AB</MenuItem>
-            <MenuItem value='IL'>IL</MenuItem>
-            <MenuItem value='CA'>CA</MenuItem>
-            <MenuItem value='NJ'>NJ</MenuItem>
-            <MenuItem value='DE'>DE</MenuItem>
-            <MenuItem value='HI'>HI</MenuItem>
-            <MenuItem value='CO'>CO</MenuItem>
-            <MenuItem value='MI'>MI</MenuItem>
-            <MenuItem value='NC'>NC</MenuItem>
-            <MenuItem value='UT'>UT</MenuItem>
-            <MenuItem value='VT'>VT</MenuItem>
-            <MenuItem value='MT'>MT</MenuItem>
-            <MenuItem value='MA'>MA</MenuItem>
-            <MenuItem value='XMS'>XMS</MenuItem>
-            <MenuItem value='TX'>TX</MenuItem>
-            <MenuItem value='WA'>WA</MenuItem>
-            <MenuItem value='VI'>VI</MenuItem>
-            <MenuItem value='SD'>SD</MenuItem>
+            <MenuItem value='PA'>Pennsylvania</MenuItem>
+            <MenuItem value='FL'>Florida</MenuItem>
+            <MenuItem value='MO'>Missouri</MenuItem>
+            <MenuItem value='AZ'>Arizona</MenuItem>
+            <MenuItem value='LA'>Louisiana</MenuItem>
+            <MenuItem value='IN'>Indiana</MenuItem>
+            <MenuItem value='NV'>Nevada</MenuItem>
+            <MenuItem value='ID'>Idaho</MenuItem>
+            <MenuItem value='TN'>Tennessee</MenuItem>
+            <MenuItem value='AB'>Alberta</MenuItem>
+            <MenuItem value='IL'>Illinois</MenuItem>
+            <MenuItem value='CA'>California</MenuItem>
+            <MenuItem value='NJ'>New Jersey</MenuItem>
+            <MenuItem value='DE'>Delaware</MenuItem>
+            <MenuItem value='HI'>Hawaii</MenuItem>
+            <MenuItem value='CO'>Colorado</MenuItem>
+            <MenuItem value='MI'>Michigan</MenuItem>
+            <MenuItem value='NC'>North Carolina</MenuItem>
+            <MenuItem value='UT'>Utah</MenuItem>
+            <MenuItem value='VT'>Vermont</MenuItem>
+            <MenuItem value='MT'>Montana</MenuItem>
+            <MenuItem value='MA'>Massachusetts</MenuItem>
+            <MenuItem value='TX'>Texas</MenuItem>
+            <MenuItem value='WA'>Washington</MenuItem>
+            <MenuItem value='VI'>Virgin Islands</MenuItem>
+            <MenuItem value='SD'>South Dakota</MenuItem>
+
+
+
           </Select>
         </Grid>
         <Grid item xs={6}>
