@@ -83,7 +83,7 @@ const airbnbFilter = async function(req, res) {
   });
 }
 
-// Route 2: GET /airbnb/:airbnbid
+// Route 2: GET /airbnb/:id
 // display name, host_name, price, minimum_nights, number_of_reviews, availability_365, city for each airbnb
 const airbnb = async function(req, res) {
   const id = req.params.airbnbid;
@@ -103,7 +103,7 @@ const airbnb = async function(req, res) {
   }); 
 }
 
-// Route 3: GET /airbnb/ranking/:city/
+// Route 3: GET /airbnb/ranking/:city
 const airbnbRanked = async function(req, res) {
   // return the ranking of airbnbs in a city
   const city = req.query.city;
@@ -126,7 +126,7 @@ const airbnbRanked = async function(req, res) {
 /********************************
  * YELP QUERIES *
  ********************************/
-//Route 4: GET yelp/:city/:is_open/:star/:review_count
+//Route 4: GET yelp/:cityName/:open/:stars/:review_count
 const yelpFilter = async function(req, res) {
   //all queries = def or 0 if defaulted
   const cityName = req.query.city;
@@ -194,7 +194,7 @@ const yelpBusinesses = async function(req, res) {
   }); 
 }
 
-// Route 6: GET /yelp/ranking/:city
+// Route 6: GET /yelp/:city
 const yelpRanking = async function(req, res) {
   // return the ranking of airbnbs in a city
   const city = req.query.city;
@@ -218,17 +218,23 @@ const yelpRanking = async function(req, res) {
  * COMPLEX QUERIES THAT JOIN TWO TABLES *
  ************************/
 
-//Route 7: GET /yelp/:id/review
-// join reviews, users, and businesses tables to list reviews and their corresponding user for a specific business
+//Route 7: GET /yelp/:id
+// Join tables businesses, users, and reviews to display most useful review along with name of user, business name, review, stars, useful, funny and cool rankings in a certain state
 const yelpBusinessesReviews = async function(req, res) {
   const id = req.params.id;
 
   connection.query(`
-    SELECT u.name, r.text, r.stars, r.useful, r.funny, r.cool
-    FROM reviews r
-    JOIN users u ON r.user_id = u.user_id
-    WHERE business_id = '${id}'
-    ORDER BY useful DESC, stars DESC, funny DESC, cool DESC  
+  SELECT u.name AS userName, b.name AS businessName, r.text AS review, r.stars, r.useful, r.funny, r.cool
+FROM (
+  SELECT business_id, MAX(useful) AS max_useful
+  FROM reviews
+  GROUP BY business_id
+) top_reviews
+JOIN reviews r ON r.business_id = top_reviews.business_id AND r.useful = top_reviews.max_useful
+JOIN users u ON r.user_id = u.user_id
+JOIN businesses b ON r.business_id = b.business_id AND b.state = 'PA'
+GROUP BY b.name
+ORDER BY b.name;
     `, (err, data) => {
     if (err || data.length === 0) {
       console.log(err);
@@ -240,17 +246,28 @@ const yelpBusinessesReviews = async function(req, res) {
 }
 
 
-// Route 8: GET /yelp/users/:id
-// display name, review_count, yelping_since, useful, funny, cool for yelp user
-const yelpUsers = async function(req, res) {
-  const users = req.params.id;
+// Route 8: GET /combined/:id/:name
+// Given the id of an airbnb, rank the surrounding businesses based on average stars and review count, and output the most useful review. 
+
+const airbnbToYelp = async function(req, res) {
+  const id = req.params.id;
+  const name = req.query.name;
 
   connection.query(`
-    USE yelp
-
-    SELECT name, review_count, yelping_since, useful, funny, cool
-    FROM users
-    WHERE user_id = '${users}'
+  SELECT b.name AS business_name, b.city,
+  AVG(r.stars) AS avg_stars, COUNT(r.review_id) AS review_count, r.text AS review
+FROM (
+SELECT business_id, MAX(useful) AS max_useful
+FROM reviews
+GROUP BY business_id
+) top_reviews
+JOIN reviews r ON r.business_id = top_reviews.business_id AND r.useful = top_reviews.max_useful
+JOIN businesses b ON r.business_id = b.business_id
+JOIN airbnb a ON a.longitudeint = b.longitudeint AND a.latitudeint = b.latitudeint
+WHERE a.id = '${id}' OR a.name = '${name}'
+GROUP BY b.business_id
+ORDER BY avg_stars DESC, review_count DESC
+LIMIT 50;
     `, (err, data) => {
     if (err || data.length === 0) {
       console.log(err);
@@ -261,93 +278,70 @@ const yelpUsers = async function(req, res) {
   }); 
 }
 
+// Route 9: GET /combined/:id/:name/:roomType/:price_min/:price_max
+// Given the id of a business or the name, rank the surrounding airbnb, filter based on price, room type, order based on number of reviews 
 
+const yelpToAirbnb = async function(req, res) {
+  const id = req.params.id;
+  const name = req.query.name;
+  const roomType = req.query.room_type ?? '';
+  const price_min = parseInt(req.query.price_min, 10) ?? 0;
+  const price_max = parseInt(req.query.price_max, 10) ?? 100000;
 
-
-// Route 9: GET /
-const combineOnLocation = async function(req, res) {
-
+  connection.query(`
+  SELECT a.name AS airbnb_name, b.name AS business_name, a.city,
+      a.price, a.number_of_reviews
+FROM airbnb a
+JOIN businesses b ON a.longitudeint = b.longitudeint AND a.latitudeint = b.latitudeint
+WHERE b.business_id = '${id}' OR b.name LIKE '${name}$%'
+AND a.price BETWEEN ${price_min} AND ${price_max}
+AND a.room_type = '${roomType}'
+GROUP BY b.business_id, a.number_of_reviews
+LIMIT 50;
+    `, (err, data) => {
+    if (err || data.length === 0) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data);
+    }
+  }); 
 }
 
-// Route 7: GET /combined/
-const top_songs = async function(req, res) {
-  const page = req.query.page;
-  // TODO (TASK 8): use the ternary (or nullish) operator to set the pageSize based on the query or default to 10
-  const pageSize = req.query.page_size ?? 10;
+// Route 10: GET /combined/stateranking
+// For each state, return the list of states ranked by decreasing number of businesses with more than 4 stars, and secondarily number of airbnb in the state.
 
-  if (!page) {
-    // TODO (TASK 9)): query the database and return all songs ordered by number of plays (descending)
-    // Hint: you will need to use a JOIN to get the album title as well
-    connection.query(`
-      SELECT S.song_id, S.title, A.album_id, A.title AS album, plays
-      FROM Songs S JOIN Albums A ON S.album_id = A.album_id
-      ORDER BY plays DESC
-      `, (err, data) => {
+const stateRanking = async function(req, res) {
+
+  connection.query(
+    `WITH temp1 AS (
+    SELECT business_id, name
+    FROM businesses
+    WHERE stars >= 4
+    ),
+    temp2 AS (
+    SELECT city, COUNT(id) AS numAirbnb
+    FROM airbnb
+    GROUP BY city
+    )
+    SELECT B.state, COUNT(temp1.business_id), temp2.numAirbnb
+    FROM businesses B
+    JOIN temp1
+    ON B.business_id = temp1.business_id
+    JOIN temp2
+    ON temp2.city = B.city
+    GROUP BY B.state, temp2.numAirbnb
+    ORDER BY COUNT(temp1.business_id) DESC, temp2.numAirbnb DESC;
+    `, (err, data) => {
       if (err || data.length === 0) {
         console.log(err);
-        res.json([]);
+        res.json({});
       } else {
         res.json(data);
       }
-    });
-  } else {
-    // TODO (TASK 10): reimplement TASK 9 with pagination
-    // Hint: use LIMIT and OFFSET (see https://www.w3schools.com/php/php_mysql_select_limit.asp)
-    connection.query(`
-      SELECT S.song_id, S.title, A.album_id, A.title AS album, plays
-      FROM Songs S JOIN Albums A ON S.album_id = A.album_id
-      ORDER BY plays DESC
-      LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)}
-      `, (err, data) => {
-      if (err || data.length === 0) {
-        console.log(err);
-        res.json([]);
-      } else {
-        res.json(data);
-      }
-    });
-  }
+    }); 
 }
 
-// Route 8: GET /top_albums
-const top_albums = async function(req, res) {
-  // TODO (TASK 11): return the top albums ordered by aggregate number of plays of all songs on the album (descending), with optional pagination (as in route 7)
-  // Hint: you will need to use a JOIN and aggregation to get the total plays of songs in an album
-  const page = req.query.page;
-  const pageSize = req.query.page_size ? req.query.page_size : 10;
-  
-  if (!page) {
-    connection.query(`
-      SELECT A.album_id, A.title AS title, SUM(plays) AS plays
-      FROM Albums A JOIN Songs S ON A.album_id = S.album_id
-      GROUP BY A.title
-      ORDER BY plays DESC
-      `, (err, data) => {
-      if (err || data.length === 0) {
-        console.log(err);
-        res.json([]);
-      } else {
-        res.json(data);
-      }
-    });
-  } else {
-    connection.query(`
-      SELECT A.album_id, A.title AS title, SUM(plays) AS plays
-      FROM Albums A JOIN Songs S ON A.album_id = S.album_id
-      GROUP BY A.title
-      ORDER BY plays DESC
-      LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)}
-      `, (err, data) => {
-      if (err || data.length === 0) {
-        console.log(err);
-        res.json([]);
-      } else {
-        res.json(data);
-      }
-    });
-  }
-  
-}
 
 module.exports = {
   author,
@@ -358,5 +352,4 @@ module.exports = {
   yelpBusinesses,
   yelpBusinessesReviews, 
   yelpRanking, 
-  yelpUsers, 
 }

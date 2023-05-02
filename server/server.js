@@ -18,7 +18,7 @@ app.get('/yelp/:city/:is_open/:star/:review_count', routes.yelpFilter);
 app.get('/yelp/:id', routes.yelpBusinesses);
 app.get('/yelp/:id/review', routes.yelpBusinessesReviews);
 app.get('/yelp/ranking/:city/', routes.yelpRanking);
-app.get('/yelp/users/:id', routes.yelpUsers);
+// app.get('/yelp/users/:id', routes.yelpUsers);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
