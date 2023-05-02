@@ -42,7 +42,7 @@ export default function SongsPage() {
 
       // copy the above link but change the variables to match the ones you added
       // to the search query in the server
-      
+
     )
       .then(res => res.json())
       .then(resJson => {
@@ -58,9 +58,11 @@ export default function SongsPage() {
   // LazyTable component. The big difference is we provide all data to the DataGrid component
   // instead of loading only the data we need (which is necessary in order to be able to sort by column)
   const columns = [
-    { field: 'title', headerName: 'Title', width: 300, renderCell: (params) => (
+    {
+      field: 'title', headerName: 'Title', width: 300, renderCell: (params) => (
         <Link onClick={() => setSelectedSongId(params.row.song_id)}>{params.value}</Link>
-    ) },
+      )
+    },
     { field: 'duration', headerName: 'Duration' },
     { field: 'plays', headerName: 'Plays' },
     { field: 'danceability', headerName: 'Danceability' },
@@ -84,17 +86,17 @@ export default function SongsPage() {
       <h2>Search AirBnBs and Yelp Businesses</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>
-          <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }}/>
+          <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
         </Grid>
         <Grid item xs={4}>
-        <FormControl>
-      <FormLabel id="demo-radio-buttons-group-label">What are you searching for?</FormLabel>
-          <FormControlLabel
-            value='AirBnB'
-            control={<Radio />}
-            label="AirBnB"
-          />
-          <FormControlLabel value="Yelp" control={<Radio />} label="Yelp" />
+          <FormControl>
+            <FormLabel id="demo-radio-buttons-group-label">What are you searching for?</FormLabel>
+            <FormControlLabel
+              value='AirBnB'
+              control={<Radio />}
+              label="AirBnB"
+            />
+            <FormControlLabel value="Yelp" control={<Radio />} label="Yelp" />
           </FormControl>
         </Grid>
         <Grid item xs={6}>
@@ -135,7 +137,7 @@ export default function SongsPage() {
           />
         </Grid>
       </Grid>
-      <Button onClick={() => search() } style={{ left: '50%', transform: 'translateX(-50%)' }}>
+      <Button onClick={() => search()} style={{ left: '50%', transform: 'translateX(-50%)' }}>
         Search
       </Button>
       <h2>Results</h2>
