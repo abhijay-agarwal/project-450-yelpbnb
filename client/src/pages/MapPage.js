@@ -30,7 +30,7 @@ const InputUserFlow = () => {
   const [minBusinesses, setMinBusinesses] = useState(0);
   const [minRating, setMinRating] = useState(0);
   const [price, setPrice] = useState([0, 2000]);
-  const [length, setLength] = useState(1);
+  const [length, setLength] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [selectedYelpId, setSelectedYelpId] = useState(null);
 
@@ -157,7 +157,7 @@ const InputUserFlow = () => {
   return (
     <Container>
       {selectedYelpId && <YelpCard airbnbId={selectedYelpId} handleClose={() => setSelectedYelpId(null)} />}
-      <Grid container spacing={3}>
+      <Grid container spacing={4}>
         <Grid item xs={12}>
           <Typography variant="h2">I'm looking for:</Typography>
         </Grid>
@@ -185,8 +185,10 @@ const InputUserFlow = () => {
             </RadioGroup>
           </FormControl>
         </Grid>
-        <Grid item xs={12}>
-          <Typography>Within a price range </Typography>
+        <Grid item xs={6}>
+          <Typography>
+            My price range is between ${price[0]} and ${price[1]}.
+          </Typography>
           <Slider
             value={price}
             min={0}
@@ -198,6 +200,9 @@ const InputUserFlow = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6}>
+          <Typography style={{ marginBottom: 20 }}>
+            I would like a {roomType || "____"}
+          </Typography>
           <FormControl style={{ minWidth: 500 }}>
             <InputLabel id="room-type-label">Room Type</InputLabel>
             <Select
@@ -213,7 +218,7 @@ const InputUserFlow = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={6} >
           <Typography>And I'll be staying for</Typography>
           <Slider
             value={length}
@@ -226,32 +231,51 @@ const InputUserFlow = () => {
           />
         </Grid>
         <Grid item xs={12}>
-          <Typography>Other Filters:</Typography>
+          <Typography variant="h4">There's more!</Typography>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography>I'd like at least this many Yelp business</Typography>
+        <Grid item xs={6} sm={6}>
+          <Typography>
+            I'd like at least{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {minBusinesses || 1}
+            </span>{" "}
+            Yelp{" "}
+            {minBusinesses < 2 ? "business" : "businesses"}
+          </Typography>
           <Slider
             value={minBusinesses}
             onChange={(e) => setMinBusinesses(e.target.value)}
             valueLabelDisplay="auto"
             aria-labelledby="num-businesses-slider"
             min={0}
-            max={50}
+            max={10}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography>And they must all have been reviewed more than this many times</Typography>
+          <Typography>
+            {minBusinesses < 2 ? "It" : "They"} must have been reviewed more than{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {minReviews || 1}
+            </span>{" "}
+            {minReviews < 2 ? "time" : "times"}
+          </Typography>
           <Slider
             value={minReviews}
             onChange={(e) => setMinReviews(e.target.value)}
             valueLabelDisplay="auto"
             aria-labelledby="num-reviews-slider"
             min={0}
-            max={1000}
+            max={200}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography>They can have a farthest distance away from me of</Typography>
+          <Typography>
+            {minBusinesses >= 2 ? "They" : "It"} can even be as far as{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {radius === 0 ? "__" : radius}
+            </span>{" "}
+            km away!
+          </Typography>
           <Slider
             value={radius}
             onChange={(e) => setRadius(e.target.value)}
@@ -263,13 +287,21 @@ const InputUserFlow = () => {
         </Grid>
 
         <Grid item xs={12} sm={6}>
-          <Typography>But to make up for it they have to have a rating of at least (out of 5)</Typography>
+          <Typography>
+            But they {" "}
+            <span style={{ fontWeight: "bold" }}>
+              ALL
+            </span>{" "} have to have a rating (out of 5) of at least{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {minRating || "__"}
+            </span>
+          </Typography>
           <Slider
             value={minRating}
             onChange={(e) => setMinRating(e.target.value)}
             valueLabelDisplay="auto"
             aria-labelledby="min-rating-slider"
-            step={0.5}
+            step={0.1}
             min={0}
             max={5}
           />
