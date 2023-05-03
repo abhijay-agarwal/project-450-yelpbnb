@@ -8,6 +8,7 @@ import JointPage from './pages/JointPage';
 import YelpPage from './pages/YelpPage';
 import AirbnbPage from './pages/AirbnbPage';
 import AirbnbInfoPage from './pages/AirbnbInfoPage';
+import MapPage from './pages/MapPage';
 
 // createTheme enables you to customize the look and feel of your app past the default
 // in this case, we only change the color scheme
@@ -31,6 +32,7 @@ export default function App() {
         <Routes>
           {/* <Route path="/map" element={<MapPage />} /> */}
           <Route path="/" element={<JointPage />} />
+          <Route path="/map" element={<MapPage />} />
           <Route path="/yelp" element={<YelpPage />} />
           <Route path="/airbnb/:airbnbId" element={<AirbnbInfoPage />} />
           <Route path="/airbnb" element={<AirbnbPage />} />

@@ -462,6 +462,61 @@ const yelpToAirbnb = async function (req, res) {
   );
 };
 
+const getCombinedData = async function (req, res) {
+  // want to use all these variables
+  //const [roomType, setRoomType] = useState("");
+  // const [numRooms, setNumRooms] = useState(1);
+  // const [minReviews, setMinReviews] = useState(0);
+  // const [radius, setRadius] = useState(0);
+  // const [numBusinesses, setNumBusinesses] = useState(0);
+  // const [minRating, setMinRating] = useState(0);
+  // const [price, setPrice] = useState([0, 2000]);
+  // const [length, setLength] = useState(1);
+  const roomType = req.query.room_type || "%";
+  const price_min = parseInt(req.query.price_min, 10) || 0;
+  const price_max = parseInt(req.query.price_max, 10) || 100000;
+  const length = parseInt(req.query.length, 10) || 100;
+
+  const minRating = parseFloat(req.query.min_rating, 10) || 0;
+
+  const minReviews = parseInt(req.query.min_reviews, 10) || 0;
+  const radius = parseInt(req.query.radius, 10) || 100;
+  const minBusinesses = parseInt(req.query.min_businesses, 10) || 0;
+
+  connection.query(
+    `
+    SELECT DISTINCT b.name AS business, a.name AS airbnb, a.price, a.number_of_reviews AS airbnbReviews,
+      b.stars AS rating, b.review_count AS yelpReviews, b.address, b.state, a.minimum_nights,
+      a.host_name, a.city AS airbnbCity, b.city AS yelpCity
+    FROM airbnb a
+    JOIN yelp.businesses b ON (6371 * acos(cos(radians(a.latitude)) * cos(radians(b.latitude))
+      * cos(radians(b.longitude) - radians(a.longitude)) + sin(radians(a.latitude))
+      * sin(radians(b.latitude)))) <= ${radius}
+      AND b.stars >= ${minRating} AND b.review_count > ${minReviews}
+    WHERE a.price BETWEEN ${price_min} AND ${price_max}
+      AND a.room_type LIKE '%'
+      AND a.number_of_reviews > ${minRating}
+      AND a.minimum_nights < ${length}
+    GROUP BY b.name, a.name, a.price, a.number_of_reviews, b.stars, b.review_count,
+      b.address, b.state, a.minimum_nights, a.room_type, a.neighbourhood, a.city, b.city
+    HAVING COUNT(*) >= ${minBusinesses};
+    `,
+    (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json({});
+      } else {
+        res.json(data);
+      }
+    }
+  );
+};
+
+
+
+
+
+
 // query that given two businesses will return both their longitudes and latitudes
 // Route 11: GET /combined/location/:airbnbId/:yelpId
 const combinedLocation = async function (req, res) {
@@ -644,38 +699,6 @@ const airbnbWithinRadius = async function (req, res) {
   });
 };
 
-//GET /yelp/distance/:business_id
-// const topAirbnbCloseToYelp = async function (req, res) {
-//   const id = req.params.business_id;
-//   connection.query(
-//     `
-//     SELECT DISTINCT a.id, a.name as business
-//            FROM airbnb a,
-//                 businesses b
-//            WHERE (
-//                          6371 * 2 * ASIN(
-//                              SQRT(
-//                                          POWER(
-//                                                  SIN((b.latitude - a.latitude) * PI() / 180 / 2), 2
-//                                              ) + COS(b.latitude * PI() / 180) * COS(a.latitude * PI() / 180) * POWER(
-//                                              SIN((b.longitude - a.longitude) * PI() / 180 / 2), 2
-//                                          )
-//                                  )
-//                          )
-//                      ) <= 50
-//     AND b.business_id = ${id}
-//              ORDER BY a.number_of_reviews DESC
-//   LIMIT 3
-//   `, (err, data) => {
-//     if (err) {
-//       console.log(err);
-//       res.json({});
-//     } else {
-//       res.json(data);
-//     }
-//   })
-// };
-
 
 module.exports = {
   author,
@@ -697,5 +720,6 @@ module.exports = {
   getCities,
   getDistance,
   airbnbWithinRadius,
+  getCombinedData,
   // topAirbnbCloseToYelp,
 };

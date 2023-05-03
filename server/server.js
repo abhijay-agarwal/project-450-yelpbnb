@@ -29,6 +29,7 @@ app.get('/combined/yelp', routes.yelpToAirbnb);
 app.get('/cities', routes.getCities);
 app.get('/combined/:yelpId', routes.airbnbWithinRadius);
 app.get('/distance/:airbnbId/:yelpId', routes.getDistance);
+app.get('/combined', routes.getCombinedData);
 // app.get('/yelp/users/:id', routes.yelpUsers);
 
 app.listen(config.server_port, () => {

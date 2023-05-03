@@ -245,9 +245,9 @@ export default function JointPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {/* {selectedAirbnbId && <AirbnbCard airbnbId={selectedAirbnbId} handleClose={() => setSelectedAirbnbId(null)} />}
-            {selectedYelpId && <YelpCard airbnbId={selectedYelpId} handleClose={() => setSelectedYelpId(null)} />} */}
-      <h2>TITLE</h2>
+      {/* {selectedYelpId && <YelpCard airbnbId={selectedYelpId} handleClose={() => setSelectedYelpId(null)} />} */}
+      <h4>Looking for your summer getaway destination? What about good food just down the road? </h4>
+      <h1>You've come to the right place!</h1>
       <Grid container spacing={6}>
         <Grid item xs={8}>
           <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
