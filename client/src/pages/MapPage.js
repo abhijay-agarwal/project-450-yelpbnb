@@ -185,7 +185,7 @@ const InputUserFlow = () => {
             </RadioGroup>
           </FormControl>
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={12}>
           <Typography>
             My price range is between ${price[0]} and ${price[1]}.
           </Typography>
@@ -200,26 +200,49 @@ const InputUserFlow = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography style={{ marginBottom: 20 }}>
-            I would like a {roomType || "____"}
+          <Typography style={{ marginTop: -15 }}>
+            I would like{" "}
+            {roomType === "Entire home/apt" ? "an" : "a"}{" "}
+            ...
           </Typography>
           <FormControl style={{ minWidth: 500 }}>
-            <InputLabel id="room-type-label">Room Type</InputLabel>
             <Select
               labelId="room-type-label"
               id="room-type-select"
               value={roomType}
               onChange={(e) => setRoomType(e.target.value)}
             >
-              <MenuItem value="Entire home/apt">Entire Home/Apartment</MenuItem>
-              <MenuItem value="Private room">Private Room</MenuItem>
-              <MenuItem value="Shared room">Shared Room</MenuItem>
-              <MenuItem value="Hotel room">Hotel Room</MenuItem>
+              <MenuItem value="Entire home/apt">
+                <span style={{ fontWeight: "bold" }}>
+                  Entire Home/Apartment
+                </span>
+              </MenuItem>
+              <MenuItem value="Private room">
+                <span style={{ fontWeight: "bold" }}>
+                  Private Room
+                </span>
+              </MenuItem>
+              <MenuItem value="Shared room">
+                <span style={{ fontWeight: "bold" }}>
+                  Shared Room
+                </span>
+              </MenuItem>
+              <MenuItem value="Hotel room">
+                <span style={{ fontWeight: "bold" }}>
+                  Hotel Room
+                </span>
+              </MenuItem>
             </Select>
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={6} >
-          <Typography>And I'll be staying for</Typography>
+          <Typography>
+            And I'll be staying for{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {length || 1}
+            </span>{" "}
+            {length < 2 ? "day" : "days"}.
+          </Typography>
           <Slider
             value={length}
             min={0}
