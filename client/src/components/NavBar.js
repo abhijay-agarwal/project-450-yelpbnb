@@ -10,7 +10,6 @@ const NavText = ({ href, text, isMain }) => {
       noWrap
       style={{
         marginRight: '30px',
-        fontFamily: 'monospace',
         fontWeight: 700,
         letterSpacing: '.3rem',
       }}
@@ -35,10 +34,11 @@ export default function NavBar() {
   return (
     <AppBar position='static'>
       <Container maxWidth='xl'>
-        <Toolbar disableGutters>
-          <NavText href='/' text='yelpBnB' isMain />
+        <Toolbar >
+          <NavText href='/' text='yelpBnB - where living ' isMain />
           <NavText href='/yelp' text='YELP' />
           <NavText href='/airbnb' text='AIRBNB' />
+          <NavText href='/join' text='JOIN' />
         </Toolbar>
       </Container>
     </AppBar>

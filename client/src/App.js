@@ -4,7 +4,7 @@ import { indigo, amber } from '@mui/material/colors'
 import { createTheme } from "@mui/material/styles";
 
 import NavBar from './components/NavBar';
-import JointPage from './pages/JointPage';
+import HomePage from "./pages/HomePage";
 import YelpPage from './pages/YelpPage';
 import AirbnbPage from './pages/AirbnbPage';
 import AirbnbInfoPage from './pages/AirbnbInfoPage';
@@ -31,7 +31,8 @@ export default function App() {
         <NavBar />
         <Routes>
           {/* <Route path="/map" element={<MapPage />} /> */}
-          <Route path="/" element={<MapPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/join" element={<MapPage />} />
           <Route path="/yelp" element={<YelpPage />} />
           <Route path="/airbnb/:airbnbId" element={<AirbnbInfoPage />} />
           <Route path="/airbnb" element={<AirbnbPage />} />

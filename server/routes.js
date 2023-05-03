@@ -542,6 +542,8 @@ const combinedLocation = async function (req, res) {
 // For each state, return the list of states ranked by decreasing number of businesses with more than 4 stars, and secondarily number of airbnb in the state.
 
 const stateRanking = async function (req, res) {
+  const page = parseInt(req.query.page, 10) || 1;
+  const pageSize = parseInt(req.query.page_size, 10) || 10;
   connection.query(
     `WITH temp1 AS (
     SELECT business_id, name
@@ -553,14 +555,15 @@ const stateRanking = async function (req, res) {
     FROM airbnb
     GROUP BY city
     )
-    SELECT B.state, COUNT(temp1.business_id), temp2.numAirbnb
+    SELECT B.state, COUNT(temp1.business_id) AS qualityBusinesses, temp2.numAirbnb AS numAirbnb
     FROM yelp.businesses B
     JOIN temp1
     ON B.business_id = temp1.business_id
     JOIN temp2
     ON temp2.city = B.city
     GROUP BY B.state, temp2.numAirbnb
-    ORDER BY COUNT(temp1.business_id) DESC, temp2.numAirbnb DESC;
+    ORDER BY COUNT(temp1.business_id) DESC, temp2.numAirbnb DESC
+    LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)};
     `,
     (err, data) => {
       if (err || data.length === 0) {
@@ -599,6 +602,32 @@ const getCities = async function (req, res) {
     }
   );
 };
+
+// GET /top_businesses
+
+const topBusinesses = async function (req, res) {
+  const page = parseInt(req.query.page, 10) || 1;
+  const pageSize = parseInt(req.query.page_size, 10) || 10;
+
+  connection.query(
+    `SELECT b.business_id, b.name, b.stars, COUNT(c.date) AS checkin_count
+    FROM businesses b
+    LEFT JOIN checkin c ON b.business_id = c.business_id
+    GROUP BY b.business_id, b.name, b.stars
+    ORDER BY b.stars DESC, checkin_count DESC
+    LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)};
+    `,
+    (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json({});
+      } else {
+        res.json(data);
+      }
+    }
+  );
+};
+
 
 
 
@@ -719,5 +748,6 @@ module.exports = {
   getDistance,
   airbnbWithinRadius,
   getCombinedData,
+  topBusinesses,
   // topAirbnbCloseToYelp,
 };
