@@ -4,6 +4,7 @@ import { Box, Button, ButtonGroup, Link, Modal } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 
 import LazyTable from '../components/LazyTable';
+import { DataGrid } from '@mui/x-data-grid';
 // import { formatDuration } from '../helpers/formatter';
 const config = require('../config.json');
 
@@ -12,27 +13,65 @@ const config = require('../config.json');
 // but in our implementation whether the Modal is open is handled by the parent component
 // (see HomePage.js for example), since it depends on the state (selectedSongId) of the parent
 export default function YelpCard({ yelpId, handleClose }) {
-  const [yelpData, setYelpData] = useState([]);
   const [airbnbData, setAirbnbData] = useState([]);
+  const [displayData, setDisplayData] = useState({});
+  const [reviews, setReviews] = useState([{}]);
 
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/yelp?id=${yelpId}`)
       .then((res) => res.json())
       .then(resJson => {
-        setYelpData(resJson);
-        fetch(`http://${config.server_host}:${config.server_port}/combined/${yelpData.business_id}`)
+        setDisplayData(resJson[0]);
+
+        fetch(`http://${config.server_host}:${config.server_port}/combined/${yelpId}`)
           .then(res => res.json())
           .then((resJson) => {
-            setAirbnbData(resJson);
+            const airbnbData = resJson.map((item) => ({ id: item.airbnbId, ...item }));
+            setAirbnbData(airbnbData);
+            setReviews(getReviews(yelpId));
           })
       })
   });
+
+  const getReviews = (id) => {
+    fetch(`http://${config.server_host}:${config.server_port}/yelp/review/${id}`)
+      .then(res => res.json())
+      .then(resJson => {
+        return resJson;
+      }
+      )
+  };
+
+  const airbnbColumns = [
+    {
+      field: 'airbnbName',
+      headerName: 'Name',
+      width: 300,
+      renderCell: (params) => (
+        <NavLink to={`/airbnb/${params.row.id}`}>{params.row.airbnbName}</NavLink>
+      )
+    },
+    {
+      field: 'airbnbCity',
+      headerName: 'City',
+      width: 150,
+      renderCell: (params) => <span>{params.row.airbnbCity}</span>
+    },
+    {
+      field: 'price',
+      headerName: 'Price',
+
+      renderCell: (params) => <p>${params.row.price}</p>
+    },
+
+  ];
+
 
 
 
   const reviewColumns = [
     {
-      field: 'userName',
+      field: 'name',
       headerName: 'User Name',
       renderCell: (row) => <span>{row.userName}</span>
     },
@@ -49,14 +88,6 @@ export default function YelpCard({ yelpId, handleClose }) {
       field: 'useful',
       headerName: 'Useful'
     },
-    {
-      field: 'funny',
-      headerName: 'Funny'
-    },
-    {
-      field: 'cool',
-      headerName: 'Cool'
-    },
   ];
 
   // ];
@@ -71,19 +102,40 @@ export default function YelpCard({ yelpId, handleClose }) {
         p={3}
         style={{ background: 'white', borderRadius: '16px', border: '2px solid #000', width: 600 }}
       >
-        <h1>{yelpData.name}</h1>
-        <p>Name: {yelpData.name}</p>
-        <p>Address: {yelpData.address}</p>
-        <p>City: {yelpData.city}</p>
-        <p>State: {yelpData.state}</p>
-        <p>Stars: {yelpData.stars}</p>
-        <p>Review Count: {yelpData.review_count}</p>
-        <p>Open: {yelpData.is_open === 1 ? 'Yes' : 'No'}</p>
-        <LazyTable route={`http://${config.server_host}:${config.server_port}/yelp/review/${yelpData.business_id}`} columns={reviewColumns} defaultPageSize={5} rowsPerPageOptions={[5, 10]} />
+        <h1>{displayData.name}</h1>
+        <p>Address: {displayData.address}</p>
+        <p>City: {displayData.city}</p>
+        <p>State: {displayData.state}</p>
+        <p>Stars: {displayData.stars}</p>
+        <p>Review Count: {displayData.review_count}</p>
+        <p>Open: {displayData.is_open === 1 ? 'Yes' : 'No'}</p>
+
+        {/** only render Reviews and the lazytable if the content of getReviews is not empty */}
+
+        <>
+          {Array.isArray(reviews) && reviews.length > 0 ? (
+            <>
+              <h2> Reviews</h2>
+              <LazyTable route={`http://${config.server_host}:${config.server_port}/yelp/review/${yelpId}`} columns={reviewColumns} defaultPageSize={5} rowsPerPageOptions={[5, 10]} />
+            </>
+          ) : (
+            <h2>No reviews found</h2>
+          )
+          }
+        </>
+
+        <h2>Top AirBnBs in the area</h2>
+        <DataGrid
+          rows={airbnbData}
+          columns={airbnbColumns}
+          pageSize={3}
+          rowsPerPageOptions={[3]}
+          autoHeight
+        />
         <Button onClick={handleClose} style={{ left: '50%', transform: 'translateX(-50%)' }} >
           Close
         </Button>
       </Box>
-    </Modal>
+    </Modal >
   );
 }

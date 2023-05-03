@@ -24,10 +24,10 @@ app.get('/yelp/ranking/:city', routes.yelpRanking);
 app.get('/yelp/:state', routes.yelpCities);
 // app.get('/yelp/distance/:business_id', routes.topAirbnbCloseToYelp)
 app.get('/combined/location/:airbnbId/:yelpId', routes.combinedLocation);
-app.get('/combined/airbnb', routes.airbnbToYelp);
+app.get('/combined/airbnb/:airbnbId', routes.airbnbToYelp);
 app.get('/combined/yelp', routes.yelpToAirbnb);
 app.get('/cities', routes.getCities);
-app.get('/combined/:id', routes.airbnbWithinRadius);
+app.get('/combined/:yelpId', routes.airbnbWithinRadius);
 app.get('/distance/:airbnbId/:yelpId', routes.getDistance);
 // app.get('/yelp/users/:id', routes.yelpUsers);
 

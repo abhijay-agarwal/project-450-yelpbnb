@@ -44,7 +44,7 @@ const author = async function (req, res) {
  * AIRBNB QUERIES *
  ********************************/
 
-// Route 1: GET /airbnb?city=&rating_count=&roomType=''&price_min=&price_max=&availability=&sort=
+// Route 1: GET /airbnb?name=name&city=&rating_count=&roomType=''&price_min=&price_max=&availability=&sort=
 const airbnbFilter = async function (req, res) {
   //all queries = def or 0 if defaulted
   // city name is req.query.city if its not '' (empty string), otherwise it's '%'
@@ -56,6 +56,7 @@ const airbnbFilter = async function (req, res) {
   const price_max = parseInt(req.query.price_max, 10) || 100000;
   const neighbourhood = req.query.neighbourhood || "%";
   const availability_min = parseInt(req.query.availability_min, 10) || 0; //minimum night availability out of 365
+  const name = req.query.name || "%";
 
   //print all variables defined above along with a string description
   console.log(`cityName: ${cityName}`);
@@ -80,12 +81,16 @@ const airbnbFilter = async function (req, res) {
   SELECT id, name, host_name, price, minimum_nights, number_of_reviews, availability_365, city
   FROM airbnb a
   WHERE a.city LIKE '${cityName}'
+  AND a.name LIKE '%${name}%'
+  AND a.neighbourhood LIKE '${neighbourhood}'
   AND a.minimum_nights <= ${stayLength}
   AND a.number_of_reviews > ${minRatingCount}
   AND a.room_type LIKE '${roomType}'
   AND a.price BETWEEN ${price_min} AND ${price_max}
   AND a.availability_365 >= ${availability_min}
   `;
+
+  console.log(airbnbquery1);
 
   if (sortOrder !== "") {
     airbnbquery1 += " ORDER BY a.price LIMIT 100" + sortOrder;
@@ -105,6 +110,8 @@ const airbnbFilter = async function (req, res) {
 // display name, host_name, price, minimum_nights, number_of_reviews, availability_365, city for each airbnb
 const airbnb = async function (req, res) {
   const id = req.params.airbnbId;
+  const page = req.query.page;
+  const pageSize = req.query.page_size;
 
   connection.query(
     `
@@ -249,13 +256,13 @@ const yelpFilter = async function (req, res) {
 //Route 5: GET /yelp/:id
 // display information for a business
 const yelpBusinesses = async function (req, res) {
-  const id = req.query.id;
+  const id = req.params.id;
 
   connection.query(
     `
-    SELECT business_id, name, address, city, stars, review_count
-    FROM yelp.businesses
-    WHERE business_id = '${id}'
+    SELECT b.business_id, b.name, b.address, b.city, b.stars, b.review_count
+    FROM yelp.businesses b
+    WHERE b.business_id = '${id}'
     `,
     (err, data) => {
       if (err || data.length === 0) {
@@ -343,19 +350,22 @@ const yelpLocation = async function (req, res) {
 // business name, review, stars, useful, funny and cool rankings for a certain business
 const yelpBusinessesReviews = async function (req, res) {
   const id = req.params.id;
-  const pageSize = parseInt(req.query.page_size, 10) || 10;
+  const pageSize = parseInt(req.query.page_size, 10) || 5;
   const page = parseInt(req.query.page, 10) || 1;
 
+  const queryString = `
+  SELECT u.name, r.text, r.stars, r.useful
+  FROM yelp.reviews r
+  JOIN yelp.users u ON r.user_id = u.user_id
+  WHERE r.business_id LIKE '${id}'
+  ORDER BY r.stars DESC, r.useful DESC
+  LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)}
+  `;
+
+  console.log(queryString);
+
   connection.query(
-    `
-    SELECT u.name, r.text, r.stars, r.useful
-    FROM reviews r
-    JOIN businesses b ON r.business_id = b.business_id
-    JOIN users u ON r.user_id = u.user_id
-    WHERE b.business_id = '${id}'
-    ORDER BY r.stars DESC, r.useful DESC;
-    LIMIT ${pageSize} OFFSET ${pageSize * (page - 1)}
-    `,
+    queryString,
     (err, data) => {
       if (err || data.length === 0) {
         console.log(err);
@@ -367,15 +377,16 @@ const yelpBusinessesReviews = async function (req, res) {
   );
 };
 
-// Route 8: GET /combined/airbnb
+// Route 8: GET /combined/airbnb/:airbnbId
 // Given the id of an airbnb, rank the surrounding businesses based on average stars and review count, and output the most useful review.
 
 const airbnbToYelp = async function (req, res) {
-  const radius = parseInt(req.query.radius, 10) || 100;
+  const id = parseInt(req.params.airbnbId, 10) || '%';
+  const radius = parseInt(req.query.radius, 10) || 1000000;
   const pageSize = parseInt(req.query.page_size, 10) || 10;
   const page = parseInt(req.query.page, 10) || 1;
   const minReviews = parseInt(req.query.review_count, 10) || 0; // minimum review_count for businesses
-  const stars = parseInt(req.query.stars, 10) || 0; // minimum stars
+  const stars = parseFloat(req.query.stars, 10) || 0; // minimum stars
   const name = req.query.name || "%";
   const is_open = req.query.is_open === "true" ? 1 : 0; //1 is open, 0 is both
 
@@ -384,12 +395,13 @@ const airbnbToYelp = async function (req, res) {
     `
     SELECT a.name, b.name AS business, b.address AS address, b.city, AVG(r.stars) AS stars, AVG(r.useful) AS useful
     FROM airbnb a, yelp.businesses b, yelp.reviews r
-    WHERE (6371 * 2 * ASIN(SQRT(POWER(SIN((b.latitude - a.latitude) * PI() / 180 / 2), 2
+    WHERE a.id = ${id}
+    AND (6371 * 2 * ASIN(SQRT(POWER(SIN((b.latitude - a.latitude) * PI() / 180 / 2), 2
        ) + COS(b.latitude * PI() / 180) * COS(a.latitude * PI() / 180) * POWER(
           SIN((b.longitude - a.longitude) * PI() / 180 / 2), 2
        )))) <= ${radius}
     AND b.business_id = r.business_id
-    AND b.number_of_reviews >= ${minReviews}
+    AND b.review_count >= ${minReviews}
     AND b.stars >= ${stars}
     AND b.name LIKE '%${name}%'
     AND b.is_open >= ${is_open}
@@ -414,7 +426,7 @@ const airbnbToYelp = async function (req, res) {
 const yelpToAirbnb = async function (req, res) {
   const name = req.query.name || "%";
   const length = parseInt(req.query.length, 10) || 100;
-  const stars = parseInt(req.query.stars, 10) || 0; // minimum stars
+  const stars = parseFloat(req.query.stars, 10) || 0; // minimum stars
   const minReviews = parseInt(req.query.review_count, 10) || 0; // minimum review_count for businesses
   const roomType = req.query.room_type || "";
   const price_min = parseInt(req.query.price_min, 10) || 0;
@@ -510,7 +522,7 @@ const stateRanking = async function (req, res) {
 
 const getCities = async function (req, res) {
   const state = req.query.state;
-  const stars = parseInt(req.query.stars, 10) || 0; // minimum stars
+  const stars = parseFloat(req.query.stars, 10) || 0; // minimum stars
   const minReviews = parseInt(req.query.review_count, 10) || 0; // minimum review_count
   const name = req.query.name || "%";
   const open = req.query.is_open === "true" ? 1 : 0; //1 is open, 0 is both
@@ -585,25 +597,43 @@ const getDistance = async function (req, res) {
   );
 };
 
+// GET /combined/:yelpId
+// gets the 3 closest businesses who have a rating over 1 (number of reviews / price) to the given yelpId
 const airbnbWithinRadius = async function (req, res) {
-  const id = req.params.id || "%";
-  const radius = parseInt(req.query.radius) || 100;
+  const id = req.params.yelpId || "%";
+  const radius = parseInt(req.query.radius) || 10000;
   const radiusKm = radius * 1.60934;
   connection.query(
     `
-    SELECT a.id AS airbnbId, a.name AS airbnbName, y.name AS yelpName, a.city AS airbnbCity, y.city AS yelpCity
-    FROM airbnb a, yelp.businesses y
-    WHERE(
-      6371 * 2 * ASIN(
-        SQRT(
-          POWER(
-            SIN((y.latitude - a.latitude) * PI() / 180 / 2), 2
-          ) + COS(y.latitude * PI() / 180) * COS(a.latitude * PI() / 180) * POWER(
-            SIN((y.longitude - a.longitude) * PI() / 180 / 2), 2
+    SELECT *
+    FROM (
+      SELECT 
+        a.id AS airbnbId, 
+        a.name AS airbnbName, 
+        a.price, 
+        a.number_of_reviews, 
+        y.name AS yelpName, 
+        a.city AS airbnbCity, 
+        y.city AS yelpCity,
+        a.number_of_reviews / a.price AS airbnbRating,
+        6371 * 2 * ASIN(
+          SQRT(
+            POWER(
+              SIN((y.latitude - a.latitude) * PI() / 180 / 2), 2
+            ) + COS(y.latitude * PI() / 180) * COS(a.latitude * PI() / 180) * POWER(
+              SIN((y.longitude - a.longitude) * PI() / 180 / 2), 2
+            )
           )
-        )
-      )
-    ) <= ${radiusKm} AND y.business_id = '${id}'
+        ) AS distance
+      FROM 
+        airbnb AS a
+        JOIN yelp.businesses AS y ON y.business_id = '${id}'
+    ) AS subquery
+    WHERE 
+      distance <= ${radiusKm} 
+    ORDER BY 
+      distance ASC
+    LIMIT 3;
   `, (err, data) => {
     if (err) {
       console.log(err);

@@ -106,7 +106,6 @@ export default function YelpPage() {
     {
       field: 'title', headerName: 'Name', width: 300, renderCell: (params) => (
         <Link onClick={() => {
-          console.log(params.row.business_id);
           setSelectedYelpId(params.row.id);
         }}>{params.row.name}</Link>
       )
@@ -214,7 +213,7 @@ export default function YelpPage() {
 
       </Grid>
       {/** center this button in the page by putting it inside an MUI component */}
-      <Button variant="contained" onClick={() => search()} style={{ left: '50%', transform: 'translateX(-50%)' }}>
+      <Button variant="contained" size="large" onClick={() => search()} style={{ left: '50%', transform: 'translateX(-50%)' }}>
         Search
       </Button>
       <h2>Results</h2>

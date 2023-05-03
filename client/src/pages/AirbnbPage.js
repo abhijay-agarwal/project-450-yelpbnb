@@ -93,6 +93,12 @@ export default function AirbnbPage() {
               const bNum = parseInt(b.neighbourhood.substring(9), 10);
               return aNum - bNum;
             });
+          } else if (city === 'Salem') {
+            resJson.sort((a, b) => {
+              const aNum = parseInt(a.neighbourhood.substring(5), 10);
+              const bNum = parseInt(b.neighbourhood.substring(5), 10);
+              return aNum - bNum;
+            });
           }
           setNeighbourhoodOptions(resJson);
         });
@@ -102,8 +108,8 @@ export default function AirbnbPage() {
 
   // get data when search is pressed
   const search = () => {
-    fetch(`http://${config.server_host}:${config.server_port}/airbnb?` +
-      `city=${city}` +
+    fetch(`http://${config.server_host}:${config.server_port}/airbnb?name=${name}` +
+      `&city=${city}` +
       `&stay_length=${length}` +
       `&price_min=${price[0]}&price_max=${price[1]}` +
       `&rating_count=${minRatings}` +
@@ -112,10 +118,13 @@ export default function AirbnbPage() {
     )
       .then(res => res.json())
       .then(resJson => {
+        console.log(Array.isArray(resJson));
         // DataGrid expects an array of objects with a unique id.
         // To accomplish this, we use a map with spread syntax (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
-        const airbnbData = resJson.map((airbnb) => ({ id: airbnb.id, ...airbnb }));
-        setData(airbnbData);
+        Array.isArray(resJson) && resJson.length > 0
+          ? setData(resJson.map((airbnb) => ({ id: airbnb.id, ...airbnb })))
+          : setData([]);
+
       });
   }
 
@@ -125,15 +134,15 @@ export default function AirbnbPage() {
   // instead of loading only the data we need (which is necessary in order to be able to sort by column)
   const columns = [
     {
-      field: 'title', headerName: 'Name', width: 550, renderCell: (params) => (
+      field: 'title', headerName: 'Name', width: 500, renderCell: (params) => (
         <NavLink to={`/airbnb/${params.row.id}`}>{params.row.name}</NavLink>
       )
     },
-    { field: 'host_name', headerName: 'Host Name', width: 110 },
-    { field: 'price', headerName: 'Price', width: 100 },
-    { field: 'minimum_nights', headerName: 'Min Nights', width: 105 },
-    { field: 'number_of_reviews', headerName: 'Reviews', width: 80 },
-    { field: 'city', headerName: 'City', width: 100 },
+    { field: 'host_name', headerName: 'Host Name', width: 130 },
+    { field: 'price', headerName: 'Price', width: 110 },
+    { field: 'minimum_nights', headerName: 'Min Nights', width: 115 },
+    { field: 'number_of_reviews', headerName: 'Reviews', width: 90 },
+    { field: 'city', headerName: 'City', width: 110 },
   ]
 
   // This component makes uses of the Grid component from MUI (https://mui.com/material-ui/react-grid/).
@@ -146,35 +155,11 @@ export default function AirbnbPage() {
   return (
     <Container>
       <h2>Find Your Perfect AirBnB</h2>
-      <Grid container spacing={6}>
-        <Grid item xs={8}>
+      <Grid container spacing={5}>
+        <Grid item xs={12}>
           <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%" }} />
         </Grid>
-        <Grid item xs={4}>
-          <FormControl>
-            <FormLabel id="demo-radio-buttons-group-label">What are you searching for?</FormLabel>
-            <RadioGroup
-              aria-labelledby="demo-controlled-radio-buttons-group"
-              name="controlled-radio-buttons-group"
-              value={searchType}
-              onChange={(e) => {
-                setSearchType(e.target.value);
-                console.log(searchType);
-              }}
-            >
-              <FormControlLabel
-                value='airbnb'
-                control={<Radio />}
-                label="AirBnB"
-              />
-              <FormControlLabel
-                value="yelp"
-                control={<Radio />}
-                label="Yelp"
-              />
-            </RadioGroup>
-          </FormControl>
-        </Grid>
+
         <Grid item xs={4}>
           <p>Price ($USD per night)</p>
           <Slider
@@ -206,46 +191,76 @@ export default function AirbnbPage() {
           <Slider
             value={minRatings}
             min={0}
-            max={100}
-            step={5}
+            max={200}
+            step={10}
             onChange={(e) => setMinRatings(e.target.value)}
             valueLabelDisplay='auto'
           />
         </Grid>
-        <Grid item xs={6}>
-          <p>Select an area</p>
-          <Select value={city} onChange={(e) => {
-            setCity(e.target.value);
-            setNeighbourhood('');
-          }} style={{ width: "100%" }}>
-            <MenuItem value=''>Any</MenuItem>
-            {cities.map((city) => (
-              <MenuItem key={city} value={city}>{city}</MenuItem>
-            ))}
-          </Select>
-        </Grid>
-        {/* <Grid item xs={4}>
-          <p>Select neighbourhood</p>
-          <Select value={neighbourhood} onChange={(e) => setNeighbourhood(e.target.value)} style={{ width: "100%" }}>
-            <MenuItem value=''>Any</MenuItem>
-            {neighbourhoodOptions.map((neighbourhood) => (
-              <MenuItem key={neighbourhood.neighbourhood} value={neighbourhood.neighbourhood}>
-                {neighbourhood.neighbourhood}
-              </MenuItem>
-            ))}
-          </Select>
-        </Grid> */}
-        <Grid item xs={6} sx={{ mb: 5 }}>
-          <p>Select room type</p>
-          <Select value={type} onChange={(e) => setType(e.target.value)} style={{ width: "100%" }}>
-            <MenuItem value="Entire home/apt">Entire Home/Apartment</MenuItem>
-            <MenuItem value="Private room">Private Room</MenuItem>
-            <MenuItem value="Shared room">Shared Room</MenuItem>
-            <MenuItem value="Hotel room">Hotel Room</MenuItem>
-          </Select>
-        </Grid>
+
+        {city ? (
+          <>
+            <Grid item xs={4}>
+              <p>Select an area</p>
+              <Select value={city} onChange={(e) => {
+                setCity(e.target.value);
+                setNeighbourhood('');
+              }} style={{ width: "100%" }}>
+                <MenuItem value=''>Any</MenuItem>
+                {cities.map((city) => (
+                  <MenuItem key={city} value={city}>{city}</MenuItem>
+                ))}
+              </Select>
+            </Grid>
+            <Grid item xs={4}>
+              <p>Select neighbourhood</p>
+              <Select value={neighbourhood} onChange={(e) => setNeighbourhood(e.target.value)} style={{ width: "100%" }}>
+                <MenuItem value=''>Any</MenuItem>
+                {neighbourhoodOptions.map((neighbourhood) => (
+                  <MenuItem key={neighbourhood.neighbourhood} value={neighbourhood.neighbourhood}>
+                    {neighbourhood.neighbourhood}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Grid>
+            <Grid item xs={4} sx={{ mb: 5 }}>
+              <p>Select room type</p>
+              <Select value={type} onChange={(e) => setType(e.target.value)} style={{ width: "100%" }}>
+                <MenuItem value="Entire home/apt">Entire Home/Apartment</MenuItem>
+                <MenuItem value="Private room">Private Room</MenuItem>
+                <MenuItem value="Shared room">Shared Room</MenuItem>
+                <MenuItem value="Hotel room">Hotel Room</MenuItem>
+              </Select>
+            </Grid>
+          </>
+        ) : (
+          <>
+            <Grid item xs={6}>
+              <p>Select an area</p>
+              <Select value={city} onChange={(e) => {
+                setCity(e.target.value);
+                setNeighbourhood('');
+              }} style={{ width: "100%" }}>
+                <MenuItem value=''>Any</MenuItem>
+                {cities.map((city) => (
+                  <MenuItem key={city} value={city}>{city}</MenuItem>
+                ))}
+              </Select>
+            </Grid>
+            <Grid item xs={6} sx={{ mb: 5 }}>
+              <p>Select room type</p>
+              <Select value={type} onChange={(e) => setType(e.target.value)} style={{ width: "100%" }}>
+                <MenuItem value="Entire home/apt">Entire Home/Apartment</MenuItem>
+                <MenuItem value="Private room">Private Room</MenuItem>
+                <MenuItem value="Shared room">Shared Room</MenuItem>
+                <MenuItem value="Hotel room">Hotel Room</MenuItem>
+              </Select>
+            </Grid>
+          </>
+        )}
+
       </Grid>
-      <Button onClick={() => search()} style={{ left: '50%', transform: 'translateX(-50%)' }}>
+      <Button variant="contained" size="large" onClick={() => search()} style={{ left: '50%', transform: 'translateX(-50%)' }}>
         Search
       </Button>
       <h2>Results</h2>
