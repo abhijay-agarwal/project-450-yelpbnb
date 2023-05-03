@@ -488,18 +488,16 @@ const getCombinedData = async function (req, res) {
     SELECT DISTINCT b.name AS business, a.name AS airbnb, a.price, a.number_of_reviews AS airbnbReviews,
       b.stars AS rating, b.review_count AS yelpReviews, b.address, b.state, a.minimum_nights,
       a.host_name, a.city AS airbnbCity, b.city AS yelpCity
-    FROM airbnb a
-    JOIN yelp.businesses b ON (6371 * acos(cos(radians(a.latitude)) * cos(radians(b.latitude))
-      * cos(radians(b.longitude) - radians(a.longitude)) + sin(radians(a.latitude))
-      * sin(radians(b.latitude)))) <= ${radius}
+    FROM airbnb a, businesses b WHERE (6371 * 2 * ASIN(SQRT(POWER(SIN((b.latitude - a.latitude) * PI() / 180 / 2), 2
+           ) + COS(b.latitude * PI() / 180) * COS(a.latitude * PI() / 180) * POWER(
+              SIN((b.longitude - a.longitude) * PI() / 180 / 2), 2
+           )))) <= ${radius}
       AND b.stars >= ${minRating} AND b.review_count > ${minReviews}
-    WHERE a.price BETWEEN ${price_min} AND ${price_max}
-      AND a.room_type LIKE '%'
+      AND a.price BETWEEN ${price_min} AND ${price_max}
+      AND a.room_type LIKE '${roomType}'
       AND a.number_of_reviews > ${minRating}
       AND a.minimum_nights < ${length}
-    GROUP BY b.name, a.name, a.price, a.number_of_reviews, b.stars, b.review_count,
-      b.address, b.state, a.minimum_nights, a.room_type, a.neighbourhood, a.city, b.city
-    HAVING COUNT(*) >= ${minBusinesses};
+    LIMIT 100;
     `,
     (err, data) => {
       if (err) {
