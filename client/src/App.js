@@ -30,8 +30,7 @@ export default function App() {
       <BrowserRouter>
         <NavBar />
         <Routes>
-          {/* <Route path="/map" element={<MapPage />} /> */}
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<MapPage />} />
           <Route path="/join" element={<MapPage />} />
           <Route path="/yelp" element={<YelpPage />} />
           <Route path="/airbnb/:airbnbId" element={<AirbnbInfoPage />} />

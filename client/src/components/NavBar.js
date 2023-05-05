@@ -35,7 +35,7 @@ export default function NavBar() {
     <AppBar position='static'>
       <Container maxWidth='xl'>
         <Toolbar >
-          <NavText href='/' text='yelpBnB - where living ' isMain />
+          <NavText href='/' text='yelpBnB ' isMain />
           <NavText href='/yelp' text='YELP' />
           <NavText href='/airbnb' text='AIRBNB' />
           <NavText href='/join' text='JOIN' />

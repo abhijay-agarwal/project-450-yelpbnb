@@ -15,7 +15,7 @@ const config = require('../config.json');
 export default function YelpCard({ yelpId, handleClose }) {
   const [airbnbData, setAirbnbData] = useState([]);
   const [displayData, setDisplayData] = useState({});
-  const [reviews, setReviews] = useState([{}]);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/yelp?id=${yelpId}`)

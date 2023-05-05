@@ -24,7 +24,6 @@ export default function AirbnbInfoPage() {
         {
             field: 'business', headerName: 'Name', width: 200, renderCell: (params) => (
                 <Link onClick={() => {
-                    console.log("hello");
                     setSelectedYelpId(params.row.business_id);
                 }}>{params.row.business}</Link>
             )

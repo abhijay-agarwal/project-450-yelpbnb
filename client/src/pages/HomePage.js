@@ -12,11 +12,11 @@ export default function HomePage() {
   const [stateRanks, setStateRanks] = useState([]);
   const [selectedYelpId, setSelectedYelpId] = useState(null);
 
-  useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/ranking`)
-      .then(res => res.json())
-      .then(resJson => setStateRanks(resJson));
-  }, []);
+  // useEffect(() => {
+  //   fetch(`http://${config.server_host}:${config.server_port}/ranking`)
+  //     .then(res => res.json())
+  //     .then(resJson => setStateRanks(resJson));
+  // }, []);
 
   const states = [
     { value: '', label: 'Any' },

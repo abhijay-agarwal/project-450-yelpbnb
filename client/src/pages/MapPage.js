@@ -34,57 +34,65 @@ const InputUserFlow = () => {
   const [pageSize, setPageSize] = useState(10);
   const [selectedYelpId, setSelectedYelpId] = useState(null);
 
+  function randomCompare() {
+    return Math.random() - 0.5;
+  }
+
   const columns =
     searchType === "airbnb"
       ? [
         {
-          field: 'title', headerName: 'Name', width: 500, renderCell: (params) => (
-            <NavLink to={`/airbnb/${params.row.id}`}>{params.row.name}</NavLink>
+          field: 'airbnb', headerName: 'Name', width: 500, renderCell: (params) => (
+            <NavLink to={`/airbnb/${params.row.id}`}>{params.row.airbnb}</NavLink>
           )
         },
         { field: "host_name", headerName: "Host Name", width: 120 },
         { field: "price", headerName: "Price", width: 110 },
         { field: "minimum_nights", headerName: "Min Nights", width: 115 },
-        { field: "number_of_reviews", headerName: "Reviews", width: 90 },
-        { field: "city", headerName: "City", width: 110 },
+        { field: "airbnbReviews", headerName: "Reviews", width: 90 },
+        { field: "airbnbCity", headerName: "City", width: 110 },
       ]
       : [
         {
-          field: "title",
+          field: "business",
           headerName: "Name",
-          width: 300,
+          width: 350,
           renderCell: (params) => (
             <Link onClick={() => setSelectedYelpId(params.row.id)}>
-              {params.row.name}
+              {params.row.business}
             </Link>
           ),
         },
-        { field: "review_count", headerName: "# of Reviews", width: 105 },
+        { field: "yelpReviews", headerName: "# of Reviews", width: 105 },
         { field: "address", headerName: "Address", width: 300 },
-        { field: "city", headerName: "City", width: 100 },
+        { field: "yelpCity", headerName: "City", width: 100 },
         { field: "state", headerName: "State", width: 100 },
-        { field: "stars", headerName: "Rating", width: 100 },
-        {
-          field: "is_open",
-          headerName: "Open?",
-          width: 100,
-          renderCell: (params) => (
-            <div>{params.row.is_open ? "Yes" : "No"}</div>
-          ),
-        },
+        { field: "rating", headerName: "Rating", width: 100 },
       ];
 
   useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/airbnb`)
+    fetch(`http://${config.server_host}:${config.server_port}/combined`)
       .then((res) => res.json())
       .then((resJson) => {
-        const airbnbData = resJson.map((airbnb) => ({
-          id: airbnb.id,
-          ...airbnb,
+        const tempData = resJson.map((item) => ({
+          id: item.yelpId + item.airbnbId,
+          ...item,
         }));
-        setData(airbnbData);
+        if (searchType === "airbnb") {
+          setData(tempData.sort(randomCompare));
+        } else {
+          const uniqueArr = tempData.reduce((acc, current) => {
+            const x = acc.find((item) => item.yelpId === current.yelpId);
+            if (!x) {
+              return acc.concat([current]);
+            } else {
+              return acc;
+            }
+          }, []);
+          setData(uniqueArr.sort(randomCompare));
+        }
       });
-  }, []);
+  }, [searchType]);
 
   // const searchAirbnb = () => {
   //   fetch(
@@ -144,12 +152,26 @@ const InputUserFlow = () => {
         // DataGrid expects an array of objects with a unique id.
         // To accomplish this, we use a map with spread syntax (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
         // validate that resJson is not null
-        // console.log(resJson);
-        setData(
+        console.log(resJson);
+        const tempData = (
           Object.keys(resJson).length === 0
             ? []
-            : resJson.map((yelp) => ({ id: yelp.business_id, ...yelp }))
+            // set the id to be the concatenation of the business and airbnb
+            : resJson.map((item) => ({ id: item.yelpId + item.airbnbId, ...item }))
         );
+        if (searchType === "airbnb") {
+          setData(tempData.sort(randomCompare));
+        } else {
+          const uniqueArr = tempData.reduce((acc, current) => {
+            const x = acc.find((item) => item.yelpId === current.yelpId);
+            if (!x) {
+              return acc.concat([current]);
+            } else {
+              return acc;
+            }
+          }, []);
+          setData(uniqueArr.sort(randomCompare));
+        }
       });
 
   };
@@ -278,9 +300,9 @@ const InputUserFlow = () => {
           <Typography>
             {minBusinesses < 2 ? "It" : "They"} must have been reviewed more than{" "}
             <span style={{ fontWeight: "bold" }}>
-              {minReviews || 1}
+              {minReviews}
             </span>{" "}
-            {minReviews < 2 ? "time" : "times"}
+            {minReviews === 1 ? "time" : "times"}
           </Typography>
           <Slider
             value={minReviews}

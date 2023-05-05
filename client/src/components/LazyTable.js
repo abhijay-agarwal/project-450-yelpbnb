@@ -21,7 +21,8 @@ export default function LazyTable({ route, columns, defaultPageSize, rowsPerPage
     fetch(`${route}?page=${page}&page_size=${pageSize}`)
       .then(res => res.json())
       .then(resJson => {
-        setData(Object.keys(resJson).length > 0 ? resJson : []);
+        // setData(Object.keys(resJson).length > 0 ? resJson : []);
+        setData(resJson);
       });
   }, [route, page, pageSize]);
 
